@@ -3,13 +3,13 @@ import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const buttons = [
@@ -137,8 +137,10 @@ export default function ScientificScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header title="Bilimsel" />
+    <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
+      <View style={{ backgroundColor: '#181818', borderBottomWidth: 1, borderBottomColor: '#232323', paddingBottom: 2 }}>
+        <Header title="Bilimsel" />
+      </View>
       <View style={styles.displayContainer}>
         <Text style={styles.inputText}>{input || '0'}</Text>
         {result !== '' && (
@@ -235,17 +237,17 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     margin: 4,
-    borderRadius: 16,
+    borderRadius: 20,
     minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
     backgroundColor: '#232323',
-    paddingVertical: 18,
+    paddingVertical: 20,
     transitionDuration: '150ms',
   },
   numberButton: {

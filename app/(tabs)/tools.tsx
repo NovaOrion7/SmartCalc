@@ -542,8 +542,10 @@ export default function ToolsScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container}>
-        <Header title="Araçlar" />
+      <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
+        <View style={{ backgroundColor: '#181818', borderBottomWidth: 1, borderBottomColor: '#232323', paddingBottom: 2 }}>
+          <Header title="Araçlar" />
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.toolSelectorScroll} contentContainerStyle={styles.toolSelectorRow}>
           {tools.map((tool) => (
             <TouchableOpacity
@@ -591,19 +593,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   toolButton: {
-    minWidth: 80,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginHorizontal: 3,
-    borderRadius: 12,
     backgroundColor: '#232323',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    marginRight: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.13,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
   selectedToolButton: {
     backgroundColor: '#ffb300',

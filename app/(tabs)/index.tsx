@@ -68,8 +68,10 @@ export default function IndexScreen() {
   const FUNCTION_KEYS = ['C', '=', '+', '-', '*', '/', '^', '(', ')'];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header title="Hesap Makinesi" />
+    <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
+      <View style={{ backgroundColor: '#181818', borderBottomWidth: 1, borderBottomColor: '#232323', paddingBottom: 2 }}>
+        <Header title="Hesap Makinesi" />
+      </View>
       <View style={styles.displayContainer}>
         <Text style={styles.inputText}>{input || '0'}</Text>
         {result !== '' && (
@@ -185,17 +187,17 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     margin: 3,
-    borderRadius: 12,
+    borderRadius: 16,
     minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 4,
     backgroundColor: '#232323',
-    paddingVertical: 14,
+    paddingVertical: 16,
     transitionDuration: '150ms',
   },
   numberButton: {
