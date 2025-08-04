@@ -1,6 +1,6 @@
-# 🧮 SmartCalc
+# 🧮 Smart Calc
 
-**SmartCalc** is a modern calculator app built with **React Native** and **Expo**, offering both **scientific features** and practical **daily tools**. It is designed with a clean UI, dark theme, and touch-optimized layout.
+**Smart Calc** is a modern calculator app built with **React Native** and **Expo**, offering both **scientific features** and practical **daily tools**. It is designed with a clean UI, customizable dark/light theme, haptic feedback, and touch-optimized layout.
 
 ---
 
@@ -17,15 +17,26 @@
 - Inverse: `1/x`
 - Modulo and negative toggle: `mod`, `±`
 - Degree and radian toggle
+- **Copy results to clipboard** with haptic feedback
 
 ### 🧰 Tools
 Accessible from the **Tools** tab:
 
-- 💱 **Currency Converter** (using [Frankfurter API](https://www.frankfurter.app))
-- 📏 **Unit Converter** (Length, Mass, Temperature)
-- 🔢 **Numeral System Converter** (Binary, Decimal, Hexadecimal)
-- ⚖️ **BMI Calculator** (Body Mass Index)
-- 🛍️ **Discount Calculator**
+- 💱 **Currency Converter** (using [Frankfurter API](https://www.frankfurter.app) with 37+ currencies)
+- 📏 **Unit Converter** (Length units: meter, centimeter, kilometer, inch, feet, yard)
+- ⚖️ **BMI Calculator** (Body Mass Index with category indicators)
+- �️ **Discount Calculator** (Price reduction calculator)
+
+### ⚙️ Settings
+Comprehensive settings panel with:
+
+- 🌙 **Dark/Light Theme Toggle**
+- 🔢 **Decimal Display Control** (show/hide decimal places)
+- 📳 **Haptic Feedback Toggle** (vibration on button press)
+- 🔊 **Sound Effects Toggle** (audio feedback)
+- 📐 **Default Angle Unit** (degrees/radians for trigonometric functions)
+- �️ **Clear History** (reset calculator history)
+- ↻ **Reset Settings** (restore default settings)
 
 ---
 
@@ -33,10 +44,14 @@ Accessible from the **Tools** tab:
 
 - **React Native** with **Expo**
 - **TypeScript**
-- `expr-eval` for mathematical parsing
-- `react-native-dropdown-picker` for dropdowns
-- `expo-router` for navigation
-- `@expo/vector-icons` for icons
+- **React Context API** for global state management
+- **AsyncStorage** for persistent settings
+- `expr-eval` for mathematical expression parsing
+- `@react-native-picker/picker` for dropdown selections
+- `expo-router` for tab-based navigation
+- `expo-clipboard` for copy-to-clipboard functionality
+- `expo-haptics` for haptic feedback
+- `@expo/vector-icons` (FontAwesome) for icons
 
 ---
 

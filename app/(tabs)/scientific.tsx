@@ -1,8 +1,11 @@
+import { useSettings } from '@/contexts/SettingsContext';
 import { FontAwesome } from '@expo/vector-icons';
+import { setStringAsync } from 'expo-clipboard';
 import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
+    Alert,
     Platform,
     SafeAreaView,
     ScrollView,
@@ -25,7 +28,31 @@ const buttons = [
 
 const FUNCTION_KEYS = ['C', '⌫', '=', '+/-', 'mod', 'n!', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', '√', 'x^2', 'x^y', '10^x', '|x|', '1/x'];
 
-function Header({ title }: { title: string }) {
+function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
+  const headerStyles = StyleSheet.create({
+    headerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      paddingTop: Platform.OS === 'android' ? 18 : 10,
+      paddingBottom: 10,
+      paddingHorizontal: 18,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.08 : 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    headerTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 22,
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
+    },
+  });
+
   return (
     <View style={headerStyles.headerContainer}>
       <FontAwesome name="superscript" size={24} color="#ffb300" style={{ marginRight: 10 }} />
@@ -34,41 +61,19 @@ function Header({ title }: { title: string }) {
   );
 }
 
-const headerStyles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#181818',
-    paddingTop: Platform.OS === 'android' ? 18 : 10,
-    paddingBottom: 10,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#232323',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-});
-
 export default function ScientificScreen() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
-  const [isDegree, setIsDegree] = useState(true);
   const navigation = useNavigation();
+  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
   const handlePress = (value: string) => {
+    triggerHaptic();
+    
     if (value === '=') {
       try {
         // ✅ Boş veya sonu eksik ifadeleri engelle
@@ -83,7 +88,7 @@ export default function ScientificScreen() {
           .replace(/factorial\(([^()]+)\)/g, '($1)!');
 
         // ✅ Trig fonksiyonlarını derece moduna göre dönüştür
-        if (isDegree) {
+        if (defaultAngleUnit === 'degree') {
           expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => {
             return `${fn}(((${arg}) * pi / 180))`;
           });
@@ -100,7 +105,7 @@ export default function ScientificScreen() {
         parser.consts.e = Math.E;
 
         const evalResult = parser.evaluate(expr);
-        setResult(evalResult.toString());
+        setResult(formatNumber(evalResult));
       } catch (err) {
         console.log('HATA:', err);
         setResult('HATA');
@@ -136,33 +141,146 @@ export default function ScientificScreen() {
     }
   };
 
+  const copyToClipboard = async () => {
+    if (result && result !== 'HATA') {
+      try {
+        await setStringAsync(result);
+        triggerHaptic();
+        Alert.alert('Kopyalandı', 'Sonuç panoya kopyalandı', [{ text: 'Tamam' }]);
+      } catch {
+        Alert.alert('Hata', 'Kopyalama işlemi başarısız', [{ text: 'Tamam' }]);
+      }
+    }
+  };
+
+  const getStyles = () => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      justifyContent: 'flex-start',
+      padding: 20,
+      paddingTop: Platform.OS === 'android' ? 40 : 20,
+    },
+    displayContainer: {
+      marginBottom: 18,
+      minHeight: 90,
+      justifyContent: 'flex-end',
+    },
+    inputText: {
+      color: isDarkMode ? '#bbb' : '#333',
+      fontSize: 28,
+      textAlign: 'right',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      marginBottom: 2,
+    },
+    resultBox: {
+      backgroundColor: isDarkMode ? '#232323' : '#e0e0e0',
+      borderRadius: 10,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      marginTop: 6,
+      alignSelf: 'flex-end',
+      minWidth: 90,
+    },
+    resultText: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 30,
+      textAlign: 'right',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    copyHint: {
+      color: isDarkMode ? '#999' : '#666',
+      fontSize: 12,
+      textAlign: 'right',
+      marginTop: 4,
+      fontStyle: 'italic',
+    },
+    keypadScroll: { paddingBottom: 30 },
+    row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+    button: {
+      flex: 1,
+      margin: 2,
+      borderRadius: 12,
+      minWidth: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDarkMode ? 0.22 : 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      backgroundColor: isDarkMode ? '#232323' : '#fff',
+      paddingVertical: 12,
+    },
+    numberButton: {
+      backgroundColor: isDarkMode ? '#232323' : '#fff',
+    },
+    functionButton: {
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+    },
+    buttonText: {
+      fontSize: 14,
+      textAlign: 'center',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    numberButtonText: {
+      color: isDarkMode ? '#fff' : '#000',
+    },
+    functionButtonText: {
+      color: isDarkMode ? '#ffb300' : '#fff',
+      fontWeight: '600',
+    },
+    angleToggle: {
+      position: 'absolute',
+      top: Platform.OS === 'android' ? 50 : 30,
+      right: 20,
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+    },
+    angleText: {
+      color: isDarkMode ? '#ffb300' : '#fff',
+      fontSize: 12,
+      fontWeight: '600',
+    },
+  });
+
+  const styles = getStyles();
+
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
-      <View style={{ backgroundColor: '#181818', borderBottomWidth: 1, borderBottomColor: '#232323', paddingBottom: 2 }}>
-        <Header title="Bilimsel" />
+      <View style={{ 
+        backgroundColor: isDarkMode ? '#181818' : '#f5f5f5', 
+        borderBottomWidth: 1, 
+        borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0', 
+        paddingBottom: 2 
+      }}>
+        <Header title="Bilimsel" isDarkMode={isDarkMode} />
       </View>
+      
+      <TouchableOpacity 
+        style={styles.angleToggle} 
+        onPress={() => triggerHaptic()}
+      >
+        <Text style={styles.angleText}>
+          {defaultAngleUnit === 'degree' ? 'DEG' : 'RAD'}
+        </Text>
+      </TouchableOpacity>
       <View style={styles.displayContainer}>
         <Text style={styles.inputText}>{input || '0'}</Text>
         {result !== '' && (
-          <View style={styles.resultBox}>
+          <TouchableOpacity style={styles.resultBox} onPress={copyToClipboard}>
             <Text style={styles.resultText}>= {result}</Text>
-          </View>
+            <Text style={styles.copyHint}>Kopyalamak için dokunun</Text>
+          </TouchableOpacity>
         )}
       </View>
-      <View style={styles.toggleRow}>
-        <TouchableOpacity
-          style={[styles.toggleButton, isDegree && styles.toggleButtonActive]}
-          onPress={() => setIsDegree(true)}
-        >
-          <Text style={[styles.toggleButtonText, isDegree && styles.toggleButtonTextActive]}>DEG</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleButton, !isDegree && styles.toggleButtonActive]}
-          onPress={() => setIsDegree(false)}
-        >
-          <Text style={[styles.toggleButtonText, !isDegree && styles.toggleButtonTextActive]}>RAD</Text>
-        </TouchableOpacity>
-      </View>
+      
       <ScrollView contentContainerStyle={styles.keypadScroll} showsVerticalScrollIndicator={false}>
         {buttons.map((row, i) => (
           <View key={i} style={styles.row}>
@@ -196,107 +314,3 @@ export default function ScientificScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#181818',
-    justifyContent: 'flex-start',
-    padding: 20,
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
-  },
-  displayContainer: {
-    marginBottom: 18,
-    minHeight: 110,
-    justifyContent: 'flex-end',
-  },
-  inputText: {
-    color: '#bbb',
-    fontSize: 36,
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    marginBottom: 2,
-  },
-  resultBox: {
-    backgroundColor: '#232323',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginTop: 6,
-    alignSelf: 'flex-end',
-    minWidth: 120,
-  },
-  resultText: {
-    color: '#fff',
-    fontSize: 40,
-    textAlign: 'right',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  keypadScroll: { paddingBottom: 30 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  button: {
-    flex: 1,
-    margin: 4,
-    borderRadius: 20,
-    minWidth: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
-    backgroundColor: '#232323',
-    paddingVertical: 20,
-    transitionDuration: '150ms',
-  },
-  numberButton: {
-    backgroundColor: '#232323',
-  },
-  functionButton: {
-    backgroundColor: '#2d2d2d',
-    borderWidth: 1,
-    borderColor: '#3a3a3a',
-  },
-  buttonText: {
-    fontSize: 22,
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  numberButtonText: {
-    color: '#fff',
-  },
-  functionButtonText: {
-    color: '#ffb300',
-    fontWeight: 'bold',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    gap: 0,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 6,
-    borderRadius: 10,
-    backgroundColor: '#232323',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#ffb300',
-    borderColor: '#ffb300',
-  },
-  toggleButtonText: {
-    color: '#bbb',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  toggleButtonTextActive: {
-    color: '#181818',
-  },
-});
