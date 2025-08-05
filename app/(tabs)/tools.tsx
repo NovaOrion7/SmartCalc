@@ -6,7 +6,7 @@ import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StyleSheet, Text
 import { useSettings } from '../../contexts/SettingsContext';
 
 export default function ToolsScreen() {
-  const { isDarkMode, triggerHaptic, formatNumber } = useSettings();
+  const { isDarkMode, triggerHaptic, formatNumber, t } = useSettings();
   const navigation = useNavigation();
   
   const [selectedTool, setSelectedTool] = useState('currency');
@@ -25,63 +25,70 @@ export default function ToolsScreen() {
   const [toUnit, setToUnit] = useState('centimeter');
   
   // İndirim hesaplayıcı için
-  const [discountPercent, setDiscountPercent] = useState('20');
+  const [discountPercent, setDiscountPercent] = useState('');
+
+  // Binary/Base converter için
+  const [binaryInput, setBinaryInput] = useState('');
+  const [baseFrom, setBaseFrom] = useState('10'); // Decimal
+  const [baseTo, setBaseTo] = useState('2'); // Binary
 
   const tools = [
-    { id: 'currency', title: 'Döviz', icon: 'money' as const },
-    { id: 'unit', title: 'Birim', icon: 'arrows-h' as const },
-    { id: 'bmi', title: 'VKE', icon: 'heart' as const },
-    { id: 'discount', title: 'İndirim', icon: 'percent' as const },
+    { id: 'currency', title: t('currency'), icon: 'money' as const },
+    { id: 'unit', title: t('unit'), icon: 'arrows-h' as const },
+    { id: 'bmi', title: t('bmi'), icon: 'heart' as const },
+    { id: 'discount', title: t('discount'), icon: 'percent' as const },
+    { id: 'binary', title: t('binary'), icon: 'code' as const },
+    { id: 'base', title: t('base'), icon: 'calculator' as const },
   ];
 
-  const currencies = [
-    { label: 'USD', value: 'USD', fullName: 'Amerikan Doları' },
-    { label: 'EUR', value: 'EUR', fullName: 'Euro' },
-    { label: 'TRY', value: 'TRY', fullName: 'Türk Lirası' },
-    { label: 'GBP', value: 'GBP', fullName: 'İngiliz Sterlini' },
-    { label: 'JPY', value: 'JPY', fullName: 'Japon Yeni' },
-    { label: 'CHF', value: 'CHF', fullName: 'İsviçre Frangı' },
-    { label: 'CAD', value: 'CAD', fullName: 'Kanada Doları' },
-    { label: 'AUD', value: 'AUD', fullName: 'Avustralya Doları' },
-    { label: 'SEK', value: 'SEK', fullName: 'İsveç Kronu' },
-    { label: 'NOK', value: 'NOK', fullName: 'Norveç Kronu' },
-    { label: 'DKK', value: 'DKK', fullName: 'Danimarka Kronu' },
-    { label: 'PLN', value: 'PLN', fullName: 'Polonya Zlotisi' },
-    { label: 'CZK', value: 'CZK', fullName: 'Çek Kronu' },
-    { label: 'HUF', value: 'HUF', fullName: 'Macar Forinti' },
-    { label: 'RUB', value: 'RUB', fullName: 'Rus Rublesi' },
-    { label: 'CNY', value: 'CNY', fullName: 'Çin Yuanı' },
-    { label: 'INR', value: 'INR', fullName: 'Hindistan Rupisi' },
-    { label: 'KRW', value: 'KRW', fullName: 'Güney Kore Wonu' },
-    { label: 'SGD', value: 'SGD', fullName: 'Singapur Doları' },
-    { label: 'HKD', value: 'HKD', fullName: 'Hong Kong Doları' },
-    { label: 'MXN', value: 'MXN', fullName: 'Meksika Pesosu' },
-    { label: 'BRL', value: 'BRL', fullName: 'Brezilya Reali' },
-    { label: 'ZAR', value: 'ZAR', fullName: 'Güney Afrika Randı' },
-    { label: 'NZD', value: 'NZD', fullName: 'Yeni Zelanda Doları' },
-    { label: 'ILS', value: 'ILS', fullName: 'İsrail Şekeli' },
-    { label: 'THB', value: 'THB', fullName: 'Tayland Bahtı' },
-    { label: 'MYR', value: 'MYR', fullName: 'Malezya Ringgiti' },
-    { label: 'PHP', value: 'PHP', fullName: 'Filipin Pesosu' },
-    { label: 'IDR', value: 'IDR', fullName: 'Endonezya Rupiahı' },
-    { label: 'SAR', value: 'SAR', fullName: 'Suudi Arabistan Riyali' },
-    { label: 'AED', value: 'AED', fullName: 'BAE Dirhemi' },
-    { label: 'EGP', value: 'EGP', fullName: 'Mısır Poundu' },
-    { label: 'QAR', value: 'QAR', fullName: 'Katar Riyali' },
-    { label: 'KWD', value: 'KWD', fullName: 'Kuveyt Dinarı' },
-    { label: 'BHD', value: 'BHD', fullName: 'Bahreyn Dinarı' },
-    { label: 'OMR', value: 'OMR', fullName: 'Umman Riyali' },
-    { label: 'JOD', value: 'JOD', fullName: 'Ürdün Dinarı' },
-    { label: 'LBP', value: 'LBP', fullName: 'Lübnan Poundu' },
+  const getCurrencies = () => [
+    { label: 'USD', value: 'USD', fullName: t('usdName') },
+    { label: 'EUR', value: 'EUR', fullName: t('eurName') },
+    { label: 'TRY', value: 'TRY', fullName: t('tryName') },
+    { label: 'GBP', value: 'GBP', fullName: t('gbpName') },
+    { label: 'JPY', value: 'JPY', fullName: t('jpyName') },
+    { label: 'CHF', value: 'CHF', fullName: t('chfName') },
+    { label: 'CAD', value: 'CAD', fullName: t('cadName') },
+    { label: 'AUD', value: 'AUD', fullName: t('audName') },
+    { label: 'SEK', value: 'SEK', fullName: 'Swedish Krona' },
+    { label: 'NOK', value: 'NOK', fullName: 'Norwegian Krone' },
+    { label: 'DKK', value: 'DKK', fullName: 'Danish Krone' },
+    { label: 'PLN', value: 'PLN', fullName: 'Polish Zloty' },
+    { label: 'CZK', value: 'CZK', fullName: 'Czech Koruna' },
+    { label: 'HUF', value: 'HUF', fullName: 'Hungarian Forint' },
+    { label: 'RUB', value: 'RUB', fullName: 'Russian Ruble' },
+    { label: 'CNY', value: 'CNY', fullName: 'Chinese Yuan' },
+    { label: 'INR', value: 'INR', fullName: 'Indian Rupee' },
+    { label: 'KRW', value: 'KRW', fullName: 'South Korean Won' },
+    { label: 'SGD', value: 'SGD', fullName: 'Singapore Dollar' },
+    { label: 'HKD', value: 'HKD', fullName: 'Hong Kong Dollar' },
+    { label: 'MXN', value: 'MXN', fullName: 'Mexican Peso' },
+    { label: 'BRL', value: 'BRL', fullName: 'Brazilian Real' },
+    { label: 'ZAR', value: 'ZAR', fullName: 'South African Rand' },
+    { label: 'NZD', value: 'NZD', fullName: 'New Zealand Dollar' },
+    { label: 'ILS', value: 'ILS', fullName: 'Israeli Shekel' },
+    { label: 'THB', value: 'THB', fullName: 'Thai Baht' },
+    { label: 'MYR', value: 'MYR', fullName: 'Malaysian Ringgit' },
+    { label: 'PHP', value: 'PHP', fullName: 'Philippine Peso' },
+    { label: 'IDR', value: 'IDR', fullName: 'Indonesian Rupiah' },
+    { label: 'SAR', value: 'SAR', fullName: 'Saudi Riyal' },
+    { label: 'AED', value: 'AED', fullName: 'UAE Dirham' },
+    { label: 'EGP', value: 'EGP', fullName: 'Egyptian Pound' },
+    { label: 'QAR', value: 'QAR', fullName: 'Qatari Riyal' },
+    { label: 'KWD', value: 'KWD', fullName: 'Kuwaiti Dinar' },
+    { label: 'BHD', value: 'BHD', fullName: 'Bahraini Dinar' },
+    { label: 'OMR', value: 'OMR', fullName: 'Omani Rial' },
+    { label: 'JOD', value: 'JOD', fullName: 'Jordanian Dinar' },
+    { label: 'LBP', value: 'LBP', fullName: 'Lebanese Pound' },
   ];
 
-  const lengthUnits = [
-    { label: 'Metre', value: 'meter', toMeter: 1 },
-    { label: 'Santimetre', value: 'centimeter', toMeter: 0.01 },
-    { label: 'Kilometre', value: 'kilometer', toMeter: 1000 },
-    { label: 'İnç', value: 'inch', toMeter: 0.0254 },
-    { label: 'Feet', value: 'feet', toMeter: 0.3048 },
-    { label: 'Yard', value: 'yard', toMeter: 0.9144 },
+  const getLengthUnits = () => [
+    { label: t('meter'), value: 'meter', toMeter: 1 },
+    { label: t('centimeter'), value: 'centimeter', toMeter: 0.01 },
+    { label: t('kilometer'), value: 'kilometer', toMeter: 1000 },
+    { label: t('inch'), value: 'inch', toMeter: 0.0254 },
+    { label: t('feet'), value: 'feet', toMeter: 0.3048 },
+    { label: t('yard'), value: 'yard', toMeter: 0.9144 },
   ];
 
   useEffect(() => {
@@ -164,12 +171,12 @@ export default function ToolsScreen() {
 
   const convertCurrency = () => {
     if (!amount || isNaN(Number(amount))) {
-      setResult('Geçerli bir miktar girin');
+      setResult(t('enterValidAmount'));
       return;
     }
 
     if (!exchangeRates[toCurrency] || !exchangeRates[fromCurrency]) {
-      setResult('Döviz kurları yüklenemedi, lütfen tekrar deneyin');
+      setResult(t('exchangeRatesError'));
       return;
     }
 
@@ -179,7 +186,7 @@ export default function ToolsScreen() {
     // Kur bilgisini de göster
     const rate = exchangeRates[toCurrency] / exchangeRates[fromCurrency];
     
-    setResult(`${formatNumber(convertedAmount)} ${toCurrency}\n\n💱 Kur: 1 ${fromCurrency} = ${formatNumber(rate)} ${toCurrency}`);
+    setResult(`${formatNumber(convertedAmount)} ${toCurrency}\n\n💱 ${t('exchangeRates')}: 1 ${fromCurrency} = ${formatNumber(rate)} ${toCurrency}`);
     triggerHaptic();
   };
 
@@ -188,7 +195,7 @@ export default function ToolsScreen() {
     const weight = parseFloat(amount2); // kilo (kg)
     
     if (!height || !weight || height <= 0 || weight <= 0) {
-      setResult('Geçerli boy ve kilo değerleri girin');
+      setResult(t('enterValidHeightWeight'));
       return;
     }
     
@@ -198,20 +205,20 @@ export default function ToolsScreen() {
     let color = '';
     
     if (bmi < 18.5) {
-      category = 'Zayıf';
+      category = t('underweight');
       color = '🔵';
     } else if (bmi < 25) {
-      category = 'Normal';
+      category = t('normal');
       color = '🟢';
     } else if (bmi < 30) {
-      category = 'Fazla kilolu';
+      category = t('overweight');
       color = '🟡';
     } else {
-      category = 'Obez';
+      category = t('obese');
       color = '🔴';
     }
     
-    setResult(`${color} VKE: ${formatNumber(bmi)} (${category})`);
+    setResult(`${color} ${t('bmi')}: ${formatNumber(bmi)} (${category})`);
     triggerHaptic();
   };
 
@@ -220,28 +227,72 @@ export default function ToolsScreen() {
     const discount = parseFloat(discountPercent);
     
     if (!price || !discount || price <= 0 || discount < 0 || discount > 100) {
-      setResult('Geçerli fiyat ve indirim oranı girin');
+      setResult(t('enterValidValues'));
       return;
     }
     
     const discountAmount = price * (discount / 100);
     const finalPrice = price - discountAmount;
-    setResult(`${formatNumber(discountAmount)} TL indirim\nSon fiyat: ${formatNumber(finalPrice)} TL`);
+    setResult(`${t('discountAmount')}: ${formatNumber(discountAmount)}\n${t('finalPrice')}: ${formatNumber(finalPrice)}`);
     triggerHaptic();
+  };
+
+  const convertBinary = () => {
+    const input = binaryInput.trim();
+    if (!input) {
+      setResult(t('enterValue'));
+      return;
+    }
+
+    try {
+      if (selectedTool === 'binary') {
+        // Binary converter - sadece 0 ve 1 kabul et
+        if (!/^[01]+$/.test(input)) {
+          setResult(t('enterValidValues'));
+          return;
+        }
+        const decimal = parseInt(input, 2);
+        const hex = decimal.toString(16).toUpperCase();
+        const octal = decimal.toString(8);
+        setResult(`${t('decimal')}: ${decimal}\n${t('hex')}: ${hex}\n${t('octal')}: ${octal}`);
+      } else {
+        // Base converter
+        const fromBase = parseInt(baseFrom);
+        const toBase = parseInt(baseTo);
+        
+        if (fromBase < 2 || fromBase > 36 || toBase < 2 || toBase > 36) {
+          setResult(t('baseRangeError'));
+          return;
+        }
+
+        const decimal = parseInt(input, fromBase);
+        if (isNaN(decimal)) {
+          setResult(t('invalidNumberFormat'));
+          return;
+        }
+        
+        const converted = decimal.toString(toBase).toUpperCase();
+        setResult(`${input} (${t('base')} ${fromBase}) = ${converted} (${t('base')} ${toBase})`);
+      }
+      triggerHaptic();
+    } catch {
+      setResult(t('conversionError'));
+    }
   };
 
   const convertUnit = () => {
     const value = parseFloat(amount);
     if (!value || value <= 0) {
-      setResult('Geçerli bir değer girin');
+      setResult(t('enterValidAmount'));
       return;
     }
     
+    const lengthUnits = getLengthUnits();
     const fromUnitData = lengthUnits.find(u => u.value === fromUnit);
     const toUnitData = lengthUnits.find(u => u.value === toUnit);
     
     if (!fromUnitData || !toUnitData) {
-      setResult('Birim seçimi hatası');
+      setResult(t('calculationError'));
       return;
     }
     
@@ -254,14 +305,17 @@ export default function ToolsScreen() {
   };
 
   const renderTool = () => {
+    const currencies = getCurrencies();
+    const lengthUnits = getLengthUnits();
+    
     switch (selectedTool) {
       case 'currency':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Döviz Dönüştürücü</Text>
+            <Text style={styles.sectionTitle}>{t('currencyConverter')}</Text>
             
             <View style={styles.refreshContainer}>
-              <Text style={styles.dataSourceText}>📊 Frankfurter API (Avrupa Merkez Bankası)</Text>
+              <Text style={styles.dataSourceText}>📊 {t('dataSource')}</Text>
               <TouchableOpacity 
                 style={styles.refreshButton}
                 onPress={() => {
@@ -280,7 +334,7 @@ export default function ToolsScreen() {
             
             <View style={styles.currencyRow}>
               <View style={styles.currencyColumn}>
-                <Text style={styles.inputLabel}>Kimden:</Text>
+                <Text style={styles.inputLabel}>{t('currency')} ({t('from')}):</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={fromCurrency}
@@ -318,7 +372,7 @@ export default function ToolsScreen() {
               </TouchableOpacity>
               
               <View style={styles.currencyColumn}>
-                <Text style={styles.inputLabel}>Kime:</Text>
+                <Text style={styles.inputLabel}>{t('currency')} ({t('to')}):</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={toCurrency}
@@ -346,7 +400,7 @@ export default function ToolsScreen() {
             
             <TextInput
               style={styles.input}
-              placeholder={`${fromCurrency} miktarı`}
+              placeholder={`${fromCurrency} ${t('amount')}`}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={amount}
               onChangeText={setAmount}
@@ -360,7 +414,7 @@ export default function ToolsScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>💱 Çevir</Text>
+                <Text style={styles.buttonText}>💱 {t('convert')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -368,11 +422,11 @@ export default function ToolsScreen() {
       case 'unit':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Birim Dönüştürücü</Text>
+            <Text style={styles.sectionTitle}>{t('unitConverter')}</Text>
             
             <View style={styles.unitRow}>
               <View style={styles.unitColumn}>
-                <Text style={styles.inputLabel}>Kimden:</Text>
+                <Text style={styles.inputLabel}>{t('unit')} ({t('from')}):</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={fromUnit}
@@ -410,7 +464,7 @@ export default function ToolsScreen() {
               </TouchableOpacity>
               
               <View style={styles.unitColumn}>
-                <Text style={styles.inputLabel}>Kime:</Text>
+                <Text style={styles.inputLabel}>{t('unit')} ({t('to')}):</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={toUnit}
@@ -438,24 +492,24 @@ export default function ToolsScreen() {
             
             <TextInput
               style={styles.input}
-              placeholder="Değer girin"
+              placeholder={t('enterAmount')}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
             />
             <TouchableOpacity style={styles.button} onPress={convertUnit}>
-              <Text style={styles.buttonText}>Çevir</Text>
+              <Text style={styles.buttonText}>{t('convert')}</Text>
             </TouchableOpacity>
           </View>
         );
       case 'bmi':
         return (
           <View>
-            <Text style={styles.sectionTitle}>VKE Hesaplayıcı</Text>
+            <Text style={styles.sectionTitle}>{t('bmiCalculator')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Boy (cm)"
+              placeholder={t('height')}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={amount}
               onChangeText={setAmount}
@@ -463,24 +517,24 @@ export default function ToolsScreen() {
             />
             <TextInput
               style={styles.input}
-              placeholder="Kilo (kg)"
+              placeholder={t('weight')}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={amount2}
               onChangeText={setAmount2}
               keyboardType="numeric"
             />
             <TouchableOpacity style={styles.button} onPress={calculateBMI}>
-              <Text style={styles.buttonText}>VKE Hesapla</Text>
+              <Text style={styles.buttonText}>{t('calculate')} {t('bmi')}</Text>
             </TouchableOpacity>
           </View>
         );
       case 'discount':
         return (
           <View>
-            <Text style={styles.sectionTitle}>İndirim Hesaplayıcı</Text>
+            <Text style={styles.sectionTitle}>{t('discountCalculator')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Fiyat (TL)"
+              placeholder={t('originalPrice')}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={amount}
               onChangeText={setAmount}
@@ -488,14 +542,73 @@ export default function ToolsScreen() {
             />
             <TextInput
               style={styles.input}
-              placeholder="İndirim oranı (%)"
+              placeholder={t('discountPercentage')}
               placeholderTextColor={isDarkMode ? '#999' : '#666'}
               value={discountPercent}
               onChangeText={setDiscountPercent}
               keyboardType="numeric"
             />
             <TouchableOpacity style={styles.button} onPress={calculateDiscount}>
-              <Text style={styles.buttonText}>İndirim Hesapla</Text>
+              <Text style={styles.buttonText}>{t('calculate')} {t('discount')}</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case 'binary':
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t('binaryConverter')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={`${t('binary')} ${t('numberToConvert')} (0 & 1)`}
+              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              value={binaryInput}
+              onChangeText={setBinaryInput}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity style={styles.button} onPress={convertBinary}>
+              <Text style={styles.buttonText}>{t('convert')}</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case 'base':
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t('baseConverter')}</Text>
+            <View style={[styles.pickerContainer, { marginBottom: 12 }]}>
+              <Text style={styles.pickerLabel}>{t('sourceBase')}</Text>
+              <Picker
+                selectedValue={baseFrom}
+                onValueChange={setBaseFrom}
+                style={[styles.picker, { color: isDarkMode ? '#fff' : '#000' }]}
+              >
+                <Picker.Item label={`2 (${t('binary')})`} value="2" />
+                <Picker.Item label={`8 (${t('octal')})`} value="8" />
+                <Picker.Item label={`10 (${t('decimal')})`} value="10" />
+                <Picker.Item label={`16 (${t('hex')})`} value="16" />
+              </Picker>
+            </View>
+            <View style={[styles.pickerContainer, { marginBottom: 12 }]}>
+              <Text style={styles.pickerLabel}>{t('targetBase')}</Text>
+              <Picker
+                selectedValue={baseTo}
+                onValueChange={setBaseTo}
+                style={[styles.picker, { color: isDarkMode ? '#fff' : '#000' }]}
+              >
+                <Picker.Item label={`2 (${t('binary')})`} value="2" />
+                <Picker.Item label={`8 (${t('octal')})`} value="8" />
+                <Picker.Item label={`10 (${t('decimal')})`} value="10" />
+                <Picker.Item label={`16 (${t('hex')})`} value="16" />
+              </Picker>
+            </View>
+            <TextInput
+              style={[styles.input, { marginBottom: 12 }]}
+              placeholder={t('numberToConvert')}
+              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              value={binaryInput}
+              onChangeText={setBinaryInput}
+            />
+            <TouchableOpacity style={styles.button} onPress={convertBinary}>
+              <Text style={styles.buttonText}>{t('convert')}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -640,6 +753,12 @@ export default function ToolsScreen() {
       overflow: 'hidden',
       minHeight: 50,
     },
+    pickerLabel: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      marginBottom: 8,
+      fontWeight: '500',
+    },
     picker: {
       color: isDarkMode ? '#fff' : '#000',
       backgroundColor: 'transparent',
@@ -703,7 +822,7 @@ export default function ToolsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.headerTitle}>Araçlar</Text>
+      <Text style={styles.headerTitle}>{t('tools')}</Text>
       
       <ScrollView
         horizontal

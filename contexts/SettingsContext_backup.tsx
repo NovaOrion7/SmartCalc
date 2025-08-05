@@ -64,14 +64,7 @@ const translations = {
     
     // Döviz Çevirici
     currencyConverter: 'Döviz Çevirici',
-    unitConverter: 'Birim Çevirici',
-    bmiCalculator: 'VKE Hesaplayıcı',
-    discountCalculator: 'İndirim Hesaplayıcı',
-    binaryConverter: 'Binary Çevirici',
-    baseConverter: 'Taban Çevirici',
-    convert: 'Çevir',
     amount: 'Miktar',
-    enterAmount: 'Miktar girin',
     from: 'Kimden',
     to: 'Kime',
     convertedAmount: 'Çevrilmiş Miktar',
@@ -100,13 +93,6 @@ const translations = {
     overweight: 'Fazla kilolu',
     obese: 'Obez',
     
-    // BMI ve İndirim
-    height: 'Boy (cm)',
-    weight: 'Kilo (kg)',
-    originalPrice: 'Orijinal Fiyat',
-    discountPercent: 'İndirim Yüzdesi (%)',
-    discountPercentage: 'İndirim Yüzdesi (%)',
-    
     // Hata Mesajları
     enterValidAmount: 'Geçerli bir miktar girin',
     enterValidHeightWeight: 'Geçerli boy ve kilo değerleri girin',
@@ -125,18 +111,6 @@ const translations = {
     discountAmount: 'İndirim Tutarı',
     enterValue: 'Bir değer girin',
     hex: 'Hex',
-    
-    // Binary ve Base Converter
-    numberToConvert: 'Çevrilecek Sayı',
-    sourceBase: 'Kaynak Taban',
-    targetBase: 'Hedef Taban',
-    decimal: 'Ondalık',
-    octal: 'Sekizlik',
-    
-    // Uygulama Bilgileri
-    application: 'Uygulama',
-    developer: 'Geliştirici: Nova Orion',
-    success: 'Başarılı',
   },
   en: {
     // Calculator
@@ -199,14 +173,7 @@ const translations = {
     
     // Currency Converter
     currencyConverter: 'Currency Converter',
-    unitConverter: 'Unit Converter',
-    bmiCalculator: 'BMI Calculator',
-    discountCalculator: 'Discount Calculator',
-    binaryConverter: 'Binary Converter',
-    baseConverter: 'Base Converter',
-    convert: 'Convert',
     amount: 'Amount',
-    enterAmount: 'Enter amount',
     from: 'From',
     to: 'To',
     convertedAmount: 'Converted Amount',
@@ -235,13 +202,6 @@ const translations = {
     overweight: 'Overweight',
     obese: 'Obese',
     
-    // BMI and Discount
-    height: 'Height (cm)',
-    weight: 'Weight (kg)',
-    originalPrice: 'Original Price',
-    discountPercent: 'Discount Percent (%)',
-    discountPercentage: 'Discount Percentage (%)',
-    
     // Error Messages
     enterValidAmount: 'Enter a valid amount',
     enterValidHeightWeight: 'Enter valid height and weight values',
@@ -260,18 +220,6 @@ const translations = {
     discountAmount: 'Discount Amount',
     enterValue: 'Enter a value',
     hex: 'Hex',
-    
-    // Binary and Base Converter
-    numberToConvert: 'Number to Convert',
-    sourceBase: 'Source Base',
-    targetBase: 'Target Base',
-    decimal: 'Decimal',
-    octal: 'Octal',
-    
-    // Application Information
-    application: 'Application',
-    developer: 'Developer: Nova Orion',
-    success: 'Success',
   }
 };
 

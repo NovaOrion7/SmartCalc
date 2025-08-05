@@ -9,12 +9,50 @@ import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableO
 export default function IndexScreen() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
+  const [instantResult, setInstantResult] = useState('');
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber } = useSettings();
+  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, t } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  // Input'u kullanıcı dostu formatta göster (10.000 gibi)
+  const formatInputDisplay = (input: string) => {
+    // Sayıları binlik ayracı ile göster, operatörleri olduğu gibi bırak
+    return input.replace(/\b\d{4,}\b/g, (match) => {
+      const num = parseInt(match);
+      return num.toLocaleString('tr-TR');
+    });
+  };
+
+  // Anında sonuç hesaplama
+  const calculateInstantResult = (input: string) => {
+    if (!input || input.length === 0) {
+      setInstantResult('');
+      return;
+    }
+    
+    try {
+      // Basit bir kontrol: son karakter operatör değilse hesapla
+      const lastChar = input.slice(-1);
+      if (['+', '-', '*', '/', '^', '('].includes(lastChar)) {
+        setInstantResult('');
+        return;
+      }
+
+      let expr = input.replace(/\^/g, '^').replace(/π/g, 'pi');
+      if (defaultAngleUnit === 'degree') {
+        expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => `${fn}(((${arg}) * pi / 180))`);
+      }
+      const parser = new Parser();
+      const evalResult = parser.evaluate(expr);
+      setInstantResult(formatNumber(evalResult));
+    } catch {
+      setInstantResult('');
+    }
+  };
 
   const handlePress = (value: string) => {
     triggerHaptic();
@@ -28,50 +66,86 @@ export default function IndexScreen() {
         }
         const parser = new Parser();
         const evalResult = parser.evaluate(expr);
-        setResult(formatNumber(evalResult));
+        const formattedResult = formatNumber(evalResult);
+        setResult(formattedResult);
+        setInstantResult(''); // Anında sonucu temizle
+        
+        // Geçmişe ekle
+        addToHistory(input, formattedResult);
       } catch {
-        setResult('HATA');
+        setResult(t('calculationError'));
+        setInstantResult('');
       }
     } else if (value === 'C') {
       setInput('');
       setResult('');
+      setInstantResult('');
     } else if (value === 'CE') {
       setInput('');
+      setInstantResult('');
     } else if (value === '⌫') {
-      setInput(prev => prev.slice(0, -1));
+      const newInput = input.slice(0, -1);
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === '+/-') {
       if (input) {
-        if (input.startsWith('-')) setInput(input.slice(1));
-        else setInput('-' + input);
+        const newInput = input.startsWith('-') ? input.slice(1) : '-' + input;
+        setInput(newInput);
+        calculateInstantResult(newInput);
       }
     } else if (value === '1/x') {
-      setInput(prev => prev + '1/(');
+      const newInput = input + '1/(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'x^2') {
-      setInput(prev => prev + '^2');
+      const newInput = input + '^2';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === '√') {
-      setInput(prev => prev + 'sqrt(');
+      const newInput = input + 'sqrt(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (['sin', 'cos', 'tan', 'log', 'ln'].includes(value)) {
-      setInput(prev => prev + value + '(');
+      const newInput = input + value + '(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'π') {
-      setInput(prev => prev + 'pi');
+      const newInput = input + 'pi';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'e') {
-      setInput(prev => prev + 'e');
+      const newInput = input + 'e';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else {
-      setInput(prev => prev + value);
+      const newInput = input + value;
+      setInput(newInput);
+      calculateInstantResult(newInput);
     }
   };
 
   const copyToClipboard = async () => {
-    if (result && result !== 'HATA') {
+    if (result && result !== t('calculationError')) {
       try {
         await setStringAsync(result);
         triggerHaptic();
-        Alert.alert('Kopyalandı', 'Sonuç panoya kopyalandı', [{ text: 'Tamam' }]);
+        Alert.alert(t('copied'), t('resultCopied'), [{ text: t('ok') }]);
       } catch {
-        Alert.alert('Hata', 'Kopyalama işlemi başarısız', [{ text: 'Tamam' }]);
+        Alert.alert(t('error'), t('copyFailed'), [{ text: t('ok') }]);
       }
     }
   };
+
+  const useResultInNewCalculation = () => {
+    if (result && result !== t('calculationError')) {
+      setInput(result);
+      setResult('');
+      setInstantResult('');
+      triggerHaptic();
+    }
+  };
+
+  // Alert'i kaldırdık, artık butonlar kullanıyoruz
 
   const buttons = [
     ['(', ')', '^', '/'],
@@ -109,8 +183,43 @@ export default function IndexScreen() {
       paddingVertical: 6,
       paddingHorizontal: 10,
       marginTop: 6,
+      flex: 1,
+    },
+    resultContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
       alignSelf: 'flex-end',
-      minWidth: 90,
+      marginTop: 10,
+    },
+    resultButtons: {
+      flexDirection: 'row',
+      marginLeft: 12,
+    },
+    actionButton: {
+      backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+      borderRadius: 8,
+      padding: 10,
+      marginLeft: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 36,
+      minHeight: 36,
+    },
+    instantResultBox: {
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+      borderRadius: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      marginTop: 4,
+      alignSelf: 'flex-end',
+      opacity: 0.8,
+    },
+    instantResultText: {
+      color: isDarkMode ? '#bbb' : '#666',
+      fontSize: 20,
+      textAlign: 'right',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontStyle: 'italic',
     },
     resultText: {
       color: isDarkMode ? '#fff' : '#000',
@@ -162,6 +271,60 @@ export default function IndexScreen() {
       color: isDarkMode ? '#ffb300' : '#fff',
       fontWeight: '600',
     },
+    historyPanel: {
+      backgroundColor: isDarkMode ? '#232323' : '#f0f0f0',
+      maxHeight: 200,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#ddd',
+    },
+    historyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#ddd',
+    },
+    historyTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    clearHistoryButton: {
+      backgroundColor: '#FF3B30',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 5,
+    },
+    clearHistoryText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    historyList: {
+      maxHeight: 140,
+    },
+    emptyHistoryText: {
+      color: isDarkMode ? '#999' : '#666',
+      textAlign: 'center',
+      padding: 20,
+      fontStyle: 'italic',
+    },
+    historyItem: {
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#eee',
+    },
+    historyCalculation: {
+      color: isDarkMode ? '#bbb' : '#666',
+      fontSize: 14,
+      marginBottom: 2,
+    },
+    historyResult: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
   });
 
   const styles = getStyles();
@@ -174,15 +337,77 @@ export default function IndexScreen() {
         borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0', 
         paddingBottom: 2 
       }}>
-        <Header title="Hesap Makinesi" isDarkMode={isDarkMode} />
+        <Header 
+          title={t('calculator')} 
+          isDarkMode={isDarkMode} 
+          onHistoryPress={() => setShowHistory(!showHistory)}
+          historyCount={getHistory().length}
+        />
       </View>
+      
+      {showHistory && (
+        <View style={styles.historyPanel}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>{t('history')}</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                clearHistory();
+                triggerHaptic();
+              }}
+              style={styles.clearHistoryButton}
+            >
+              <Text style={styles.clearHistoryText}>{t('clear')}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
+            {getHistory().length === 0 ? (
+              <Text style={styles.emptyHistoryText}>{t('noHistory')}</Text>
+            ) : (
+              getHistory().map((item, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.historyItem}
+                  onPress={() => {
+                    setInput(item.calculation);
+                    setResult(item.result);
+                    setShowHistory(false);
+                    triggerHaptic();
+                  }}
+                >
+                  <Text style={styles.historyCalculation}>{item.calculation}</Text>
+                  <Text style={styles.historyResult}>= {item.result}</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      )}
+      
       <View style={styles.displayContainer}>
-        <Text style={styles.inputText}>{input || '0'}</Text>
+        <Text style={styles.inputText}>{formatInputDisplay(input) || '0'}</Text>
+        
+        {/* Anında sonuç göster */}
+        {instantResult && !result && (
+          <View style={styles.instantResultBox}>
+            <Text style={styles.instantResultText}>= {instantResult}</Text>
+          </View>
+        )}
+        
+        {/* Nihai sonuç ve butonlar */}
         {result !== '' && (
-          <TouchableOpacity style={styles.resultBox} onPress={copyToClipboard}>
-            <Text style={styles.resultText}>= {result}</Text>
-            <Text style={styles.copyHint}>Kopyalamak için dokunun</Text>
-          </TouchableOpacity>
+          <View style={styles.resultContainer}>
+            <View style={styles.resultBox}>
+              <Text style={styles.resultText}>= {result}</Text>
+            </View>
+            <View style={styles.resultButtons}>
+              <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
+                <FontAwesome name="copy" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
+                <FontAwesome name="plus" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
       </View>
       <ScrollView contentContainerStyle={styles.keypadScroll} showsVerticalScrollIndicator={false}>
@@ -219,11 +444,17 @@ export default function IndexScreen() {
   );
 }
 
-function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
+function Header({ title, isDarkMode, onHistoryPress, historyCount }: { 
+  title: string; 
+  isDarkMode: boolean; 
+  onHistoryPress: () => void;
+  historyCount: number;
+}) {
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
@@ -236,18 +467,42 @@ function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
       shadowRadius: 2,
       elevation: 2,
     },
+    leftSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
     headerTitle: {
       color: isDarkMode ? '#fff' : '#000',
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
     },
+    historyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 15,
+    },
+    historyCount: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 12,
+      marginLeft: 5,
+      fontWeight: 'bold',
+    },
   });
 
   return (
     <View style={headerStyles.headerContainer}>
-      <FontAwesome name="calculator" size={24} color="#ffb300" style={{ marginRight: 10 }} />
-      <Text style={headerStyles.headerTitle}>{title}</Text>
+      <View style={headerStyles.leftSection}>
+        <FontAwesome name="calculator" size={24} color="#ffb300" style={{ marginRight: 10 }} />
+        <Text style={headerStyles.headerTitle}>{title}</Text>
+      </View>
+      <TouchableOpacity style={headerStyles.historyButton} onPress={onHistoryPress}>
+        <FontAwesome name="history" size={16} color={isDarkMode ? '#ffb300' : '#666'} />
+        <Text style={headerStyles.historyCount}>{historyCount}</Text>
+      </TouchableOpacity>
     </View>
   );
 }

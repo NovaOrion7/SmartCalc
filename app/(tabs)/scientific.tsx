@@ -5,14 +5,14 @@ import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const buttons = [
@@ -28,11 +28,17 @@ const buttons = [
 
 const FUNCTION_KEYS = ['C', '⌫', '=', '+/-', 'mod', 'n!', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', '√', 'x^2', 'x^y', '10^x', '|x|', '1/x'];
 
-function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
+function Header({ title, isDarkMode, onHistoryPress, historyCount }: { 
+  title: string; 
+  isDarkMode: boolean; 
+  onHistoryPress: () => void;
+  historyCount: number;
+}) {
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
@@ -45,18 +51,42 @@ function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
       shadowRadius: 2,
       elevation: 2,
     },
+    leftSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
     headerTitle: {
       color: isDarkMode ? '#fff' : '#000',
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
     },
+    historyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 15,
+    },
+    historyCount: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 12,
+      marginLeft: 5,
+      fontWeight: 'bold',
+    },
   });
 
   return (
     <View style={headerStyles.headerContainer}>
-      <FontAwesome name="superscript" size={24} color="#ffb300" style={{ marginRight: 10 }} />
-      <Text style={headerStyles.headerTitle}>{title}</Text>
+      <View style={headerStyles.leftSection}>
+        <FontAwesome name="superscript" size={24} color="#ffb300" style={{ marginRight: 10 }} />
+        <Text style={headerStyles.headerTitle}>{title}</Text>
+      </View>
+      <TouchableOpacity style={headerStyles.historyButton} onPress={onHistoryPress}>
+        <FontAwesome name="history" size={16} color={isDarkMode ? '#ffb300' : '#666'} />
+        <Text style={headerStyles.historyCount}>{historyCount}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -64,12 +94,55 @@ function Header({ title, isDarkMode }: { title: string; isDarkMode: boolean }) {
 export default function ScientificScreen() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState('');
+  const [instantResult, setInstantResult] = useState('');
+  const [showHistory, setShowHistory] = useState(false);
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber } = useSettings();
+  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, t } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  // Input'u kullanıcı dostu formatta göster (10.000 gibi)
+  const formatInputDisplay = (input: string) => {
+    return input.replace(/\b\d{4,}\b/g, (match) => {
+      const num = parseInt(match);
+      return num.toLocaleString('tr-TR');
+    });
+  };
+
+  // Anında sonuç hesaplama
+  const calculateInstantResult = (input: string) => {
+    if (!input || input.length === 0) {
+      setInstantResult('');
+      return;
+    }
+    
+    try {
+      const lastChar = input.slice(-1);
+      if (['+', '-', '*', '/', '^', '('].includes(lastChar)) {
+        setInstantResult('');
+        return;
+      }
+
+      let expr = input
+        .replace(/π/g, 'pi')
+        .replace(/mod\(([^()]+),([^()]+)\)/g, '($1 % $2)')
+        .replace(/factorial\(([^()]+)\)/g, '($1)!');
+
+      if (defaultAngleUnit === 'degree') {
+        expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => {
+          return `${fn}(((${arg}) * pi / 180))`;
+        });
+      }
+
+      const parser = new Parser();
+      const evalResult = parser.evaluate(expr);
+      setInstantResult(formatNumber(evalResult));
+    } catch {
+      setInstantResult('');
+    }
+  };
 
   const handlePress = (value: string) => {
     triggerHaptic();
@@ -78,7 +151,8 @@ export default function ScientificScreen() {
       try {
         // ✅ Boş veya sonu eksik ifadeleri engelle
         if (!input || /[+\-*/^.]$/.test(input.trim())) {
-          setResult('HATA');
+          setResult(t('calculationError'));
+          setInstantResult('');
           return;
         }
 
@@ -105,51 +179,88 @@ export default function ScientificScreen() {
         parser.consts.e = Math.E;
 
         const evalResult = parser.evaluate(expr);
-        setResult(formatNumber(evalResult));
+        const formattedResult = formatNumber(evalResult);
+        setResult(formattedResult);
+        setInstantResult(''); // Anında sonucu temizle
+        
+        // Geçmişe ekle
+        addToScientificHistory(input, formattedResult);
       } catch (err) {
         console.log('HATA:', err);
-        setResult('HATA');
+        setResult(t('calculationError'));
+        setInstantResult('');
       }
     } else if (value === 'C') {
       setInput('');
       setResult('');
+      setInstantResult('');
     } else if (value === '⌫') {
-      setInput((prev) => prev.slice(0, -1));
+      const newInput = input.slice(0, -1);
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === '+/-') {
       if (input) {
-        if (input.startsWith('-')) setInput(input.slice(1));
-        else setInput('-' + input);
+        const newInput = input.startsWith('-') ? input.slice(1) : '-' + input;
+        setInput(newInput);
+        calculateInstantResult(newInput);
       }
     } else if (value === '1/x') {
-      setInput((prev) => prev + '1/(');
+      const newInput = input + '1/(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'x^2') {
-      setInput((prev) => prev + '^2');
+      const newInput = input + '^2';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === '√') {
-      setInput((prev) => prev + 'sqrt(');
+      const newInput = input + 'sqrt(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === '|x|') {
-      setInput((prev) => prev + 'abs(');
+      const newInput = input + 'abs(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'n!') {
-      setInput((prev) => prev + 'factorial(');
+      const newInput = input + 'factorial(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (['sin', 'cos', 'tan', 'log', 'ln', 'exp', 'mod'].includes(value)) {
-      setInput((prev) => prev + value + '(');
+      const newInput = input + value + '(';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'π') {
-      setInput((prev) => prev + 'pi');
+      const newInput = input + 'pi';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else if (value === 'e') {
-      setInput((prev) => prev + 'e');
+      const newInput = input + 'e';
+      setInput(newInput);
+      calculateInstantResult(newInput);
     } else {
-      setInput((prev) => prev + value);
+      const newInput = input + value;
+      setInput(newInput);
+      calculateInstantResult(newInput);
     }
   };
 
   const copyToClipboard = async () => {
-    if (result && result !== 'HATA') {
+    if (result && result !== t('calculationError')) {
       try {
         await setStringAsync(result);
         triggerHaptic();
-        Alert.alert('Kopyalandı', 'Sonuç panoya kopyalandı', [{ text: 'Tamam' }]);
+        Alert.alert(t('copied'), t('resultCopied'), [{ text: t('ok') }]);
       } catch {
-        Alert.alert('Hata', 'Kopyalama işlemi başarısız', [{ text: 'Tamam' }]);
+        Alert.alert(t('error'), t('copyFailed'), [{ text: t('ok') }]);
       }
+    }
+  };
+
+  const useResultInNewCalculation = () => {
+    if (result && result !== t('calculationError')) {
+      setInput(result);
+      setResult('');
+      setInstantResult('');
+      triggerHaptic();
     }
   };
 
@@ -181,6 +292,42 @@ export default function ScientificScreen() {
       marginTop: 6,
       alignSelf: 'flex-end',
       minWidth: 90,
+    },
+    instantResultBox: {
+      backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+      borderRadius: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      marginTop: 4,
+      alignSelf: 'flex-end',
+      minWidth: 60,
+    },
+    instantResultText: {
+      color: isDarkMode ? '#888' : '#666',
+      fontSize: 18,
+      textAlign: 'right',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontStyle: 'italic',
+    },
+    resultContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginTop: 6,
+    },
+    actionButton: {
+      backgroundColor: isDarkMode ? '#444' : '#ddd',
+      borderRadius: 6,
+      padding: 8,
+      marginLeft: 8,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    resultButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 8,
     },
     resultText: {
       color: isDarkMode ? '#fff' : '#000',
@@ -233,20 +380,79 @@ export default function ScientificScreen() {
       fontWeight: '600',
     },
     angleToggle: {
-      position: 'absolute',
-      top: Platform.OS === 'android' ? 50 : 30,
-      right: 20,
+      alignSelf: 'flex-end',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 8,
       borderWidth: 1,
       borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+      marginBottom: 10,
     },
     angleText: {
       color: isDarkMode ? '#ffb300' : '#fff',
       fontSize: 12,
       fontWeight: '600',
+    },
+    historyPanel: {
+      backgroundColor: isDarkMode ? '#1a1a1a' : '#f8f8f8',
+      marginHorizontal: 20,
+      marginBottom: 10,
+      borderRadius: 12,
+      maxHeight: 250,
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#333' : '#e0e0e0',
+    },
+    historyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#e0e0e0',
+    },
+    historyTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    clearHistoryButton: {
+      backgroundColor: isDarkMode ? '#ff4444' : '#ff6b6b',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 6,
+    },
+    clearHistoryText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: 'bold',
+    },
+    historyList: {
+      maxHeight: 180,
+    },
+    emptyHistoryText: {
+      color: isDarkMode ? '#888' : '#666',
+      textAlign: 'center',
+      fontStyle: 'italic',
+      padding: 20,
+    },
+    historyItem: {
+      paddingHorizontal: 15,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+    },
+    historyCalculation: {
+      color: isDarkMode ? '#ccc' : '#555',
+      fontSize: 14,
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    historyResult: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
   });
 
@@ -260,24 +466,87 @@ export default function ScientificScreen() {
         borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0', 
         paddingBottom: 2 
       }}>
-        <Header title="Bilimsel" isDarkMode={isDarkMode} />
+        <Header 
+          title={t('scientific')} 
+          isDarkMode={isDarkMode} 
+          onHistoryPress={() => setShowHistory(!showHistory)}
+          historyCount={getScientificHistory().length}
+        />
       </View>
+      
+      {/* Geçmiş Paneli */}
+      {showHistory && (
+        <View style={styles.historyPanel}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>{t('scientificHistory')}</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                clearScientificHistory();
+                triggerHaptic();
+              }}
+              style={styles.clearHistoryButton}
+            >
+              <Text style={styles.clearHistoryText}>{t('clear')}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.historyList} showsVerticalScrollIndicator={false}>
+            {getScientificHistory().length === 0 ? (
+              <Text style={styles.emptyHistoryText}>{t('noHistory')}</Text>
+            ) : (
+              getScientificHistory().map((item, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.historyItem}
+                  onPress={() => {
+                    setInput(item.calculation);
+                    setResult(item.result);
+                    setShowHistory(false);
+                    triggerHaptic();
+                  }}
+                >
+                  <Text style={styles.historyCalculation}>{item.calculation}</Text>
+                  <Text style={styles.historyResult}>= {item.result}</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      )}
       
       <TouchableOpacity 
         style={styles.angleToggle} 
         onPress={() => triggerHaptic()}
       >
         <Text style={styles.angleText}>
-          {defaultAngleUnit === 'degree' ? 'DEG' : 'RAD'}
+          {defaultAngleUnit === 'degree' ? t('degree').toUpperCase().slice(0, 3) : t('radian').toUpperCase().slice(0, 3)}
         </Text>
       </TouchableOpacity>
+      
       <View style={styles.displayContainer}>
-        <Text style={styles.inputText}>{input || '0'}</Text>
+        <Text style={styles.inputText}>{formatInputDisplay(input) || '0'}</Text>
+        
+        {/* Anında sonuç göster */}
+        {instantResult && !result && (
+          <View style={styles.instantResultBox}>
+            <Text style={styles.instantResultText}>= {instantResult}</Text>
+          </View>
+        )}
+        
+        {/* Nihai sonuç ve butonlar */}
         {result !== '' && (
-          <TouchableOpacity style={styles.resultBox} onPress={copyToClipboard}>
-            <Text style={styles.resultText}>= {result}</Text>
-            <Text style={styles.copyHint}>Kopyalamak için dokunun</Text>
-          </TouchableOpacity>
+          <View style={styles.resultContainer}>
+            <View style={styles.resultBox}>
+              <Text style={styles.resultText}>= {result}</Text>
+            </View>
+            <View style={styles.resultButtons}>
+              <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
+                <FontAwesome name="copy" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
+                <FontAwesome name="plus" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
       </View>
       
