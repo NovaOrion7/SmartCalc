@@ -12,7 +12,7 @@ export default function IndexScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const [instantResult, setInstantResult] = useState('');
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, t } = useSettings();
+  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, t } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -160,7 +160,9 @@ export default function IndexScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
       justifyContent: 'flex-start',
       padding: 20,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
@@ -171,14 +173,18 @@ export default function IndexScreen() {
       justifyContent: 'flex-end',
     },
     inputText: {
-      color: isDarkMode ? '#bbb' : '#333',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#bbb') 
+        : (highContrast ? '#000000' : '#333'),
       fontSize: 30,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
       marginBottom: 2,
     },
     resultBox: {
-      backgroundColor: isDarkMode ? '#232323' : '#e0e0e0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#333333' : '#232323') 
+        : (highContrast ? '#f0f0f0' : '#e0e0e0'),
       borderRadius: 10,
       paddingVertical: 6,
       paddingHorizontal: 10,
@@ -196,7 +202,9 @@ export default function IndexScreen() {
       marginLeft: 12,
     },
     actionButton: {
-      backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#666666' : '#333') 
+        : (highContrast ? '#e0e0e0' : '#f0f0f0'),
       borderRadius: 8,
       padding: 10,
       marginLeft: 6,
@@ -206,7 +214,9 @@ export default function IndexScreen() {
       minHeight: 36,
     },
     instantResultBox: {
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#444444' : '#2a2a2a') 
+        : (highContrast ? '#e8e8e8' : '#f5f5f5'),
       borderRadius: 8,
       paddingVertical: 4,
       paddingHorizontal: 8,
@@ -215,14 +225,18 @@ export default function IndexScreen() {
       opacity: 0.8,
     },
     instantResultText: {
-      color: isDarkMode ? '#bbb' : '#666',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#bbb') 
+        : (highContrast ? '#000000' : '#666'),
       fontSize: 20,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
       fontStyle: 'italic',
     },
     resultText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 32,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',

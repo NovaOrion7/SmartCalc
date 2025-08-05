@@ -11,6 +11,7 @@ export default function SettingsScreen() {
     vibrationEnabled,
     defaultAngleUnit,
     language,
+    highContrast,
     updateSettings,
     triggerHaptic,
     clearHistory: clearCalculatorHistory,
@@ -30,6 +31,11 @@ export default function SettingsScreen() {
   const handleDecimalsToggle = (value: boolean) => {
     triggerHaptic();
     updateSettings({ showDecimals: value });
+  };
+
+  const handleHighContrastToggle = (value: boolean) => {
+    triggerHaptic();
+    updateSettings({ highContrast: value });
   };
 
   const handleVibrationToggle = (value: boolean) => {
@@ -121,7 +127,9 @@ export default function SettingsScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
     },
     scrollView: {
       flex: 1,
@@ -130,13 +138,17 @@ export default function SettingsScreen() {
     title: {
       fontSize: 28,
       fontWeight: 'bold',
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       marginTop: 20,
       marginBottom: 30,
       textAlign: 'center',
     },
     section: {
-      backgroundColor: isDarkMode ? '#1a1a1a' : '#fff',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#333333' : '#1a1a1a') 
+        : (highContrast ? '#f0f0f0' : '#fff'),
       borderRadius: 12,
       padding: 20,
       marginBottom: 20,
@@ -283,6 +295,19 @@ export default function SettingsScreen() {
               onValueChange={handleDecimalsToggle}
               trackColor={{ false: '#767577', true: '#81b0ff' }}
               thumbColor={showDecimals ? '#f5dd4b' : '#f4f3f4'}
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>{t('highContrast')}</Text>
+              <Text style={styles.settingDescription}>{t('highContrastDesc')}</Text>
+            </View>
+            <Switch
+              value={highContrast}
+              onValueChange={handleHighContrastToggle}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={highContrast ? '#f5dd4b' : '#f4f3f4'}
             />
           </View>
 

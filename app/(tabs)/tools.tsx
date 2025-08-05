@@ -6,7 +6,7 @@ import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StyleSheet, Text
 import { useSettings } from '../../contexts/SettingsContext';
 
 export default function ToolsScreen() {
-  const { isDarkMode, triggerHaptic, formatNumber, t } = useSettings();
+  const { isDarkMode, triggerHaptic, formatNumber, highContrast, t } = useSettings();
   const navigation = useNavigation();
   
   const [selectedTool, setSelectedTool] = useState('currency');
@@ -620,12 +620,16 @@ export default function ToolsScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
       padding: 20,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
     },
     headerTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 22,
       fontWeight: 'bold',
       textAlign: 'center',

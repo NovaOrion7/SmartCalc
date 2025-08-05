@@ -97,7 +97,7 @@ export default function ScientificScreen() {
   const [instantResult, setInstantResult] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, t } = useSettings();
+  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, t } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -267,7 +267,9 @@ export default function ScientificScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
       justifyContent: 'flex-start',
       padding: 20,
       paddingTop: Platform.OS === 'android' ? 40 : 20,

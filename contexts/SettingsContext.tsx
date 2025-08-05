@@ -36,6 +36,8 @@ const translations = {
     appearance: 'Görünüm',
     darkMode: 'Karanlık Mod',
     darkModeDesc: 'Uygulamayı karanlık temada kullan',
+    highContrast: 'Yüksek Kontrast',
+    highContrastDesc: 'Daha iyi görünürlük için yüksek kontrast modu',
     showDecimals: 'Ondalık Sayıları Göster',
     showDecimalsDesc: 'Sonuçlarda ondalık kısmı göster',
     language: 'Dil',
@@ -201,6 +203,8 @@ const translations = {
     appearance: 'Appearance',
     darkMode: 'Dark Mode',
     darkModeDesc: 'Use the app in dark theme',
+    highContrast: 'High Contrast',
+    highContrastDesc: 'High contrast mode for better visibility',
     showDecimals: 'Show Decimals',
     showDecimalsDesc: 'Show decimal places in results',
     language: 'Language',
@@ -342,6 +346,7 @@ interface SettingsContextType {
   soundEnabled: boolean;
   defaultAngleUnit: 'degree' | 'radian';
   language: 'tr' | 'en';
+  highContrast: boolean;
   updateSettings: (newSettings: Partial<SettingsState>) => void;
   triggerHaptic: () => void;
   formatNumber: (num: number) => string;
@@ -361,6 +366,7 @@ interface SettingsState {
   soundEnabled: boolean;
   defaultAngleUnit: 'degree' | 'radian';
   language: 'tr' | 'en';
+  highContrast: boolean;
 }
 
 const defaultSettings: SettingsState = {
@@ -369,7 +375,8 @@ const defaultSettings: SettingsState = {
   vibrationEnabled: true,
   soundEnabled: false,
   defaultAngleUnit: 'degree',
-  language: 'tr'
+  language: 'tr',
+  highContrast: false
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -400,6 +407,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           soundEnabled: parsedSettings.soundEnabled ?? defaultSettings.soundEnabled,
           defaultAngleUnit: parsedSettings.defaultAngleUnit ?? defaultSettings.defaultAngleUnit,
           language: parsedSettings.language ?? defaultSettings.language,
+          highContrast: parsedSettings.highContrast ?? defaultSettings.highContrast,
         });
       }
     } catch (error) {
