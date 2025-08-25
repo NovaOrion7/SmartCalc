@@ -138,7 +138,9 @@ export default function IndexScreen() {
 
   const useResultInNewCalculation = () => {
     if (result && result !== t('calculationError')) {
-      setInput(result);
+      // Convert Turkish formatted number back to parser format (comma to dot)
+      const parsableResult = result.replace(/\./g, '').replace(',', '.');
+      setInput(parsableResult);
       setResult('');
       setInstantResult('');
       triggerHaptic();
@@ -153,7 +155,7 @@ export default function IndexScreen() {
     ['4', '5', '6', '-'],
     ['1', '2', '3', '+'],
     ['0', '⌫', 'C', '.'],
-    ['', '', '=', ''],
+    ['='],
   ];
 
   const FUNCTION_KEYS = ['C', '=', '+', '-', '*', '/', '^', '(', ')', '⌫'];
@@ -340,6 +342,15 @@ export default function IndexScreen() {
       fontSize: 16,
       fontWeight: 'bold',
     },
+    lastRow: {
+      justifyContent: 'center',
+    },
+    equalsButton: {
+      flex: 0,
+      minWidth: 200,
+      backgroundColor: '#007AFF',
+      borderColor: '#0056cc',
+    },
   });
 
   const styles = getStyles();
@@ -427,7 +438,7 @@ export default function IndexScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.keypadScroll} showsVerticalScrollIndicator={false}>
         {buttons.map((row, i) => (
-          <View key={i} style={styles.row}>
+          <View key={i} style={[styles.row, i === buttons.length - 1 ? styles.lastRow : null]}>
             {row.map((value, j) =>
               value ? (
                 <TouchableOpacity
@@ -435,6 +446,7 @@ export default function IndexScreen() {
                   style={[
                     styles.button,
                     FUNCTION_KEYS.includes(value) ? styles.functionButton : styles.numberButton,
+                    i === buttons.length - 1 ? styles.equalsButton : null,
                   ]}
                   activeOpacity={0.7}
                   onPress={() => handlePress(value)}

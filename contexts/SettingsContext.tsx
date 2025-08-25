@@ -30,6 +30,7 @@ const translations = {
     discount: 'İndirim',
     binary: 'Binary',
     base: 'Taban',
+    stock: 'Hisse',
     
     // Settings
     settings: 'Ayarlar',
@@ -71,6 +72,7 @@ const translations = {
     discountCalculator: 'İndirim Hesaplayıcı',
     binaryConverter: 'Binary Çevirici',
     baseConverter: 'Taban Çevirici',
+    stockCalculator: 'Hisse Tavan-Taban',
     convert: 'Çevir',
     amount: 'Miktar',
     enterAmount: 'Miktar girin',
@@ -148,6 +150,22 @@ const translations = {
     baseRangeError: 'Taban 2-36 arasında olmalı',
     conversionError: 'Dönüşüm hatası',
     
+    // Hisse Tavan-Taban Hesaplayıcı
+    stockName: 'Hisse Adı',
+    stockPrice: 'Hisse Fiyatı',
+    stockQuantity: 'Hisse Adedi',
+    ceilingPrice: 'Tavan Fiyatı',
+    floorPrice: 'Taban Fiyatı',
+    dailyLimit: 'Günlük Limit',
+    calculateStock: 'Hesapla',
+    enterValidStock: 'Geçerli hisse fiyatı ve adedi girin',
+    analysis: 'Analiz',
+    price: 'Fiyat',
+    quantity: 'Adet',
+    capital: 'Sermaye',
+    ceilingLevels: 'TAVAN SEVİYELERİ',
+    floorLevels: 'TABAN SEVİYELERİ',
+    
     // Diğer
     refresh: 'Yenile',
     exchangeRates: 'Döviz Kurları',
@@ -197,6 +215,7 @@ const translations = {
     discount: 'Discount',
     binary: 'Binary',
     base: 'Base',
+    stock: 'Stock',
     
     // Settings
     settings: 'Settings',
@@ -238,6 +257,7 @@ const translations = {
     discountCalculator: 'Discount Calculator',
     binaryConverter: 'Binary Converter',
     baseConverter: 'Base Converter',
+    stockCalculator: 'Stock Ceiling-Floor',
     convert: 'Convert',
     amount: 'Amount',
     enterAmount: 'Enter amount',
@@ -314,6 +334,22 @@ const translations = {
     exchangeRatesError: 'Exchange rates could not be loaded, please try again',
     baseRangeError: 'Base must be between 2-36',
     conversionError: 'Conversion error',
+    
+    // Stock Ceiling-Floor Calculator
+    stockName: 'Stock Name',
+    stockPrice: 'Stock Price',
+    stockQuantity: 'Stock Quantity',
+    ceilingPrice: 'Ceiling Price',
+    floorPrice: 'Floor Price',
+    dailyLimit: 'Daily Limit',
+    calculateStock: 'Calculate',
+    enterValidStock: 'Enter valid stock price and quantity',
+    analysis: 'Analysis',
+    price: 'Price',
+    quantity: 'Quantity',
+    capital: 'Capital',
+    ceilingLevels: 'CEILING LEVELS',
+    floorLevels: 'FLOOR LEVELS',
     
     // Other
     refresh: 'Refresh',

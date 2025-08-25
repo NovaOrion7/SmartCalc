@@ -5,14 +5,14 @@ import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
-  Alert,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const buttons = [
@@ -257,7 +257,9 @@ export default function ScientificScreen() {
 
   const useResultInNewCalculation = () => {
     if (result && result !== t('calculationError')) {
-      setInput(result);
+      // Convert Turkish formatted number back to parser format (comma to dot)
+      const parsableResult = result.replace(/\./g, '').replace(',', '.');
+      setInput(parsableResult);
       setResult('');
       setInstantResult('');
       triggerHaptic();

@@ -6,7 +6,7 @@ import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StyleSheet, Text
 import { useSettings } from '../../contexts/SettingsContext';
 
 export default function ToolsScreen() {
-  const { isDarkMode, triggerHaptic, formatNumber, highContrast, t } = useSettings();
+  const { isDarkMode, triggerHaptic, formatNumber, highContrast, t, language } = useSettings();
   const navigation = useNavigation();
   
   const [selectedTool, setSelectedTool] = useState('currency');
@@ -27,6 +27,12 @@ export default function ToolsScreen() {
   // İndirim hesaplayıcı için
   const [discountPercent, setDiscountPercent] = useState('');
 
+  // Hisse tavan-taban hesaplayıcı için
+  const [stockName, setStockName] = useState('');
+  const [stockPrice, setStockPrice] = useState('');
+  const [stockQuantity, setStockQuantity] = useState('');
+  const [stockResults, setStockResults] = useState<any>(null);
+
   // Binary/Base converter için
   const [binaryInput, setBinaryInput] = useState('');
   const [baseFrom, setBaseFrom] = useState('10'); // Decimal
@@ -37,6 +43,7 @@ export default function ToolsScreen() {
     { id: 'unit', title: t('unit'), icon: 'arrows-h' as const },
     { id: 'bmi', title: t('bmi'), icon: 'heart' as const },
     { id: 'discount', title: t('discount'), icon: 'percent' as const },
+    { id: 'stock', title: t('stock'), icon: 'line-chart' as const },
     { id: 'binary', title: t('binary'), icon: 'code' as const },
     { id: 'base', title: t('base'), icon: 'calculator' as const },
   ];
@@ -234,6 +241,175 @@ export default function ToolsScreen() {
     const discountAmount = price * (discount / 100);
     const finalPrice = price - discountAmount;
     setResult(`${t('discountAmount')}: ${formatNumber(discountAmount)}\n${t('finalPrice')}: ${formatNumber(finalPrice)}`);
+    triggerHaptic();
+  };
+
+  // Padding utility function for formatted numbers
+  const StockResultsComponent = ({ stockData }: { stockData: any }) => {
+    console.log('StockResultsComponent received data:', {
+      ceilingLevelsCount: stockData?.ceilingLevels?.length,
+      floorLevelsCount: stockData?.floorLevels?.length,
+      stockData
+    });
+    
+    return (
+      <View style={styles.stockResultsContainer}>
+        {/* Header */}
+        <View style={styles.stockHeader}>
+          <View style={styles.stockIconContainer}>
+            <FontAwesome name="line-chart" size={24} color="#007AFF" />
+          </View>
+          <View style={styles.stockHeaderText}>
+            <Text style={styles.stockTitle}>{stockData.stockName}</Text>
+            <Text style={styles.stockSubtitle}>{t('analysis')}</Text>
+          </View>
+        </View>
+
+        {/* Current Status */}
+        <View style={styles.stockCurrentStatus}>
+          <View style={styles.stockCurrentRow}>
+            <View style={styles.stockCurrentItem}>
+              <Text style={styles.stockCurrentLabel}>{t('price')}</Text>
+              <Text style={styles.stockCurrentValue}>{formatNumber(stockData.price)} TL</Text>
+            </View>
+            <View style={styles.stockCurrentItem}>
+              <Text style={styles.stockCurrentLabel}>{t('quantity')}</Text>
+              <Text style={styles.stockCurrentValue}>{formatNumber(stockData.quantity)}</Text>
+            </View>
+            <View style={styles.stockCurrentItem}>
+              <Text style={styles.stockCurrentLabel}>{t('capital')}</Text>
+              <Text style={styles.stockCurrentValue}>{formatNumber(stockData.capital)} TL</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Ceiling Levels */}
+        <View style={styles.stockSection}>
+          <View style={styles.stockSectionHeader}>
+            <View style={styles.stockSectionIcon}>
+              <Text style={styles.stockSectionEmoji}>🟢</Text>
+            </View>
+            <Text style={styles.stockSectionTitle}>{t('ceilingLevels')}</Text>
+          </View>
+          <ScrollView style={styles.stockLevelsScroll} showsVerticalScrollIndicator={false}>
+            {stockData.ceilingLevels.map((level: any, index: number) => (
+              <View key={index} style={styles.stockLevelItem}>
+                <View style={styles.stockLevelNumber}>
+                  <Text style={styles.stockLevelNumberText}>{level.level}</Text>
+                </View>
+                <View style={styles.stockLevelContent}>
+                  <View style={styles.stockLevelPrice}>
+                    <Text style={styles.stockLevelPriceText}>{formatNumber(level.price)} TL</Text>
+                    <Text style={styles.stockLevelPriceSubtext}>
+                      {t('price')}
+                    </Text>
+                  </View>
+                  <View style={styles.stockLevelProfit}>
+                    <Text style={[styles.stockLevelProfitText, { color: '#22C55E' }]}>
+                      +{formatNumber(level.profit)} TL
+                    </Text>
+                    <Text style={[styles.stockLevelProfitPercent, { color: '#22C55E' }]}>
+                      +{formatNumber(level.profitPercent)}%
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Floor Levels */}
+        <View style={styles.stockSection}>
+          <View style={styles.stockSectionHeader}>
+            <View style={styles.stockSectionIcon}>
+              <Text style={styles.stockSectionEmoji}>🔴</Text>
+            </View>
+            <Text style={styles.stockSectionTitle}>{t('floorLevels')}</Text>
+          </View>
+          <ScrollView style={styles.stockLevelsScroll} showsVerticalScrollIndicator={false}>
+            {stockData.floorLevels.map((level: any, index: number) => (
+              <View key={index} style={styles.stockLevelItem}>
+                <View style={styles.stockLevelNumber}>
+                  <Text style={styles.stockLevelNumberText}>{level.level}</Text>
+                </View>
+                <View style={styles.stockLevelContent}>
+                  <View style={styles.stockLevelPrice}>
+                    <Text style={styles.stockLevelPriceText}>{formatNumber(level.price)} TL</Text>
+                    <Text style={styles.stockLevelPriceSubtext}>
+                      {t('price')}
+                    </Text>
+                  </View>
+                  <View style={styles.stockLevelProfit}>
+                    <Text style={[styles.stockLevelProfitText, { color: '#EF4444' }]}>
+                      -{formatNumber(level.loss)} TL
+                    </Text>
+                    <Text style={[styles.stockLevelProfitPercent, { color: '#EF4444' }]}>
+                      -{formatNumber(level.lossPercent)}%
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    );
+  };
+
+  const calculateStock = () => {
+    const price = parseFloat(stockPrice);
+    const quantity = parseFloat(stockQuantity);
+    
+    if (!price || !quantity || price <= 0 || quantity <= 0) {
+      setResult(t('enterValidStock'));
+      setStockResults(null);
+      return;
+    }
+    
+    // Calculate capital (initial investment)
+    const capital = price * quantity;
+    
+    // Turkish stock market daily limit percentage
+    const dailyLimitPercent = 10;
+    
+    // Calculate ceiling levels
+    const ceilingLevels = [];
+    for (let i = 1; i <= 10; i++) {
+      const ceilingPrice = price * Math.pow(1 + dailyLimitPercent / 100, i);
+      const profit = (ceilingPrice - price) * quantity;
+      const profitPercent = ((ceilingPrice - price) / price) * 100;
+      ceilingLevels.push({
+        level: i,
+        price: ceilingPrice,
+        profit,
+        profitPercent
+      });
+    }
+    console.log('Ceiling levels calculated:', ceilingLevels.length, ceilingLevels);
+
+    // Calculate floor levels
+    const floorLevels = [];
+    for (let i = 1; i <= 10; i++) {
+      const floorPrice = price * Math.pow(1 - dailyLimitPercent / 100, i);
+      const loss = (price - floorPrice) * quantity;
+      const lossPercent = ((price - floorPrice) / price) * 100;
+      floorLevels.push({
+        level: i,
+        price: floorPrice,
+        loss,
+        lossPercent
+      });
+    }
+    console.log('Floor levels calculated:', floorLevels.length, floorLevels);    setStockResults({
+      stockName: stockName || 'STOCK',
+      price,
+      quantity,
+      capital,
+      ceilingLevels,
+      floorLevels
+    });
+    
+    setResult('calculated'); // Just a flag to show results
     triggerHaptic();
   };
 
@@ -553,6 +729,38 @@ export default function ToolsScreen() {
             </TouchableOpacity>
           </View>
         );
+      case 'stock':
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t('stockCalculator')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={`${t('stockName')} (${language === 'tr' ? 'İsteğe bağlı' : 'Optional'})`}
+              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              value={stockName}
+              onChangeText={setStockName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder={`${t('stockPrice')} (TL)`}
+              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              value={stockPrice}
+              onChangeText={setStockPrice}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder={`${t('stockQuantity')} (${language === 'tr' ? 'Adet' : 'Pieces'})`}
+              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              value={stockQuantity}
+              onChangeText={setStockQuantity}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity style={styles.button} onPress={calculateStock}>
+              <Text style={styles.buttonText}>📈 {t('calculateStock')}</Text>
+            </TouchableOpacity>
+          </View>
+        );
       case 'binary':
         return (
           <View>
@@ -623,6 +831,9 @@ export default function ToolsScreen() {
       backgroundColor: isDarkMode 
         ? (highContrast ? '#000000' : '#181818') 
         : (highContrast ? '#ffffff' : '#f5f5f5'),
+    },
+    scrollContainer: {
+      flexGrow: 1,
       padding: 20,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
     },
@@ -808,17 +1019,189 @@ export default function ToolsScreen() {
       fontStyle: 'italic',
     },
     result: {
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#e8f4fd',
-      padding: 15,
-      borderRadius: 10,
+      backgroundColor: isDarkMode ? '#232323' : '#f0f8ff',
+      padding: 18,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: isDarkMode ? '#444' : '#b3d9ff',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    resultScrollView: {
+      maxHeight: 350,
+      marginTop: 10,
+      flex: 1,
+    },
+    resultScrollContent: {
+      flexGrow: 1,
     },
     resultText: {
       color: isDarkMode ? '#fff' : '#000',
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 15,
+      fontWeight: '500',
+      textAlign: 'left',
+      lineHeight: 24,
+      letterSpacing: 0.5,
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      paddingVertical: 2,
+    },
+    // Stock Results Styles
+    stockResultsContainer: {
+      backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginTop: 15,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    stockHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+    },
+    stockIconContainer: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: isDarkMode ? '#007AFF20' : '#007AFF15',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 15,
+    },
+    stockHeaderText: {
+      flex: 1,
+    },
+    stockTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 2,
+    },
+    stockSubtitle: {
+      color: isDarkMode ? '#999' : '#666',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    stockCurrentStatus: {
+      backgroundColor: isDarkMode ? '#232323' : '#f8f9fa',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+    },
+    stockCurrentRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    stockCurrentItem: {
+      flex: 1,
+      alignItems: 'center',
+      paddingHorizontal: 5,
+    },
+    stockCurrentLabel: {
+      color: isDarkMode ? '#999' : '#666',
+      fontSize: 12,
+      fontWeight: '500',
+      marginBottom: 4,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    stockCurrentValue: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
       textAlign: 'center',
+    },
+    stockSection: {
+      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      marginBottom: 1,
+    },
+    stockSectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+    },
+    stockSectionIcon: {
+      marginRight: 12,
+    },
+    stockSectionEmoji: {
+      fontSize: 20,
+    },
+    stockSectionTitle: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    stockLevelsScroll: {
+      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+    },
+    stockLevelItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: isDarkMode ? '#2a2a2a' : '#f1f3f4',
+      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+    },
+    stockLevelNumber: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDarkMode ? '#333' : '#e9ecef',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    stockLevelNumberText: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    stockLevelContent: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    stockLevelPrice: {
+      flex: 1,
+    },
+    stockLevelPriceText: {
+      color: isDarkMode ? '#fff' : '#000',
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 2,
+    },
+    stockLevelPriceSubtext: {
+      color: isDarkMode ? '#999' : '#666',
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    stockLevelProfit: {
+      alignItems: 'flex-end',
+      minWidth: 120,
+    },
+    stockLevelProfitText: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 2,
+    },
+    stockLevelProfitPercent: {
+      fontSize: 12,
+      fontWeight: '600',
     },
   });
 
@@ -826,54 +1209,78 @@ export default function ToolsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.headerTitle}>{t('tools')}</Text>
-      
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.toolSelectorScroll}
-        contentContainerStyle={styles.toolSelectorRow}
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
       >
-        {tools.map((tool) => (
-          <TouchableOpacity
-            key={tool.id}
-            style={[
-              styles.toolButton,
-              selectedTool === tool.id && styles.selectedToolButton,
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              setSelectedTool(tool.id);
-              setResult('');
-              setAmount('');
-            }}
-          >
-            <FontAwesome 
-              name={tool.icon} 
-              size={16} 
-              color={selectedTool === tool.id ? '#fff' : (isDarkMode ? '#fff' : '#333')} 
-            />
-            <Text
-              style={[
-                styles.toolButtonText,
-                selectedTool === tool.id && styles.selectedToolButtonText,
-              ]}
-            >
-              {tool.title}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      <View style={styles.toolContainer}>
-        {renderTool()}
+        <Text style={styles.headerTitle}>{t('tools')}</Text>
         
-        {result !== '' && (
-          <View style={styles.result}>
-            <Text style={styles.resultText}>{result}</Text>
-          </View>
-        )}
-      </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.toolSelectorScroll}
+          contentContainerStyle={styles.toolSelectorRow}
+        >
+          {tools.map((tool) => (
+            <TouchableOpacity
+              key={tool.id}
+              style={[
+                styles.toolButton,
+                selectedTool === tool.id && styles.selectedToolButton,
+              ]}
+              onPress={() => {
+                triggerHaptic();
+                setSelectedTool(tool.id);
+                setResult('');
+                setAmount('');
+                setAmount2('');
+                setStockName('');
+                setStockPrice('');
+                setStockQuantity('');
+                setStockResults(null);
+                setBinaryInput('');
+              }}
+            >
+              <FontAwesome 
+                name={tool.icon} 
+                size={16} 
+                color={selectedTool === tool.id ? '#fff' : (isDarkMode ? '#fff' : '#333')} 
+              />
+              <Text
+                style={[
+                  styles.toolButtonText,
+                  selectedTool === tool.id && styles.selectedToolButtonText,
+                ]}
+              >
+                {tool.title}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.toolContainer}>
+          {renderTool()}
+          
+          {result !== '' && selectedTool !== 'stock' && (
+            <ScrollView 
+              style={styles.resultScrollView}
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={styles.resultScrollContent}
+              nestedScrollEnabled={true}
+              bounces={true}
+              scrollEventThrottle={16}
+            >
+              <View style={styles.result}>
+                <Text style={styles.resultText}>{result}</Text>
+              </View>
+            </ScrollView>
+          )}
+          
+          {selectedTool === 'stock' && stockResults && (
+            <StockResultsComponent stockData={stockResults} />
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
