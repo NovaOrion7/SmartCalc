@@ -104,14 +104,9 @@ export default function ScientificScreen() {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // Input değiştiğinde displayInput'u da güncelle
-  React.useEffect(() => {
-    updateDisplayInput(input);
-  }, [input]);
-
   // Display input'u güncelle
   const updateDisplayInput = (rawInput: string) => {
-    // Şimdilik formatlamayı devre dışı bırak, doğrudan ham input'u göster
+    // Formatlamayı tamamen devre dışı bırak - sadece ham input göster
     setDisplayInput(rawInput);
   };
 

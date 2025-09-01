@@ -15,18 +15,13 @@ export default function IndexScreen() {
   const navigation = useNavigation();
   const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, t } = useSettings();
 
-  // Input değiştiğinde displayInput'u da güncelle
-  React.useEffect(() => {
-    updateDisplayInput(input);
-  }, [input]);
-
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
   // Display input'u güncelle
   const updateDisplayInput = (rawInput: string) => {
-    // Şimdilik formatlamayı devre dışı bırak, doğrudan ham input'u göster
+    // Formatlamayı tamamen devre dışı bırak - sadece ham input göster
     setDisplayInput(rawInput);
   };
 
