@@ -2,7 +2,7 @@
   "expo": {
     "name": "Smart Calc",
     "slug": "SmartCalc",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartcalc",
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 6,
+      "versionCode": 7,
       "edgeToEdgeEnabled": true,
       "package": "com.ismailjacob.SmartCalc"
     },
