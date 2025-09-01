@@ -7,24 +7,27 @@ import React, { useLayoutEffect, useState } from 'react';
 import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function IndexScreen() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(''); // Ham input - hesaplamalar için
+  const [displayInput, setDisplayInput] = useState(''); // Formatlanmış input - görüntüleme için
   const [result, setResult] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [instantResult, setInstantResult] = useState('');
   const navigation = useNavigation();
   const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, t } = useSettings();
 
+  // Input değiştiğinde displayInput'u da güncelle
+  React.useEffect(() => {
+    updateDisplayInput(input);
+  }, [input]);
+
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  // Input'u kullanıcı dostu formatta göster (10.000 gibi)
-  const formatInputDisplay = (input: string) => {
-    // Sayıları binlik ayracı ile göster, operatörleri olduğu gibi bırak
-    return input.replace(/\b\d{4,}\b/g, (match) => {
-      const num = parseInt(match);
-      return num.toLocaleString('tr-TR');
-    });
+  // Display input'u güncelle
+  const updateDisplayInput = (rawInput: string) => {
+    // Şimdilik formatlamayı devre dışı bırak, doğrudan ham input'u göster
+    setDisplayInput(rawInput);
   };
 
   // Anında sonuç hesaplama
@@ -71,55 +74,66 @@ export default function IndexScreen() {
         setInstantResult(''); // Anında sonucu temizle
         
         // Geçmişe ekle
-        addToHistory(input, formattedResult);
+        addToHistory(displayInput, formattedResult);
       } catch {
         setResult(t('calculationError'));
         setInstantResult('');
       }
     } else if (value === 'C') {
       setInput('');
+      setDisplayInput('');
       setResult('');
       setInstantResult('');
     } else if (value === 'CE') {
       setInput('');
+      setDisplayInput('');
       setInstantResult('');
     } else if (value === '⌫') {
       const newInput = input.slice(0, -1);
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === '+/-') {
       if (input) {
         const newInput = input.startsWith('-') ? input.slice(1) : '-' + input;
         setInput(newInput);
+        updateDisplayInput(newInput);
         calculateInstantResult(newInput);
       }
     } else if (value === '1/x') {
       const newInput = input + '1/(';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === 'x^2') {
       const newInput = input + '^2';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === '√') {
       const newInput = input + 'sqrt(';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (['sin', 'cos', 'tan', 'log', 'ln'].includes(value)) {
       const newInput = input + value + '(';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === 'π') {
       const newInput = input + 'pi';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === 'e') {
       const newInput = input + 'e';
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else {
       const newInput = input + value;
       setInput(newInput);
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     }
   };
@@ -141,6 +155,7 @@ export default function IndexScreen() {
       // Convert Turkish formatted number back to parser format (comma to dot)
       const parsableResult = result.replace(/\./g, '').replace(',', '.');
       setInput(parsableResult);
+      updateDisplayInput(parsableResult);
       setResult('');
       setInstantResult('');
       triggerHaptic();
@@ -403,6 +418,7 @@ export default function IndexScreen() {
                   style={styles.historyItem}
                   onPress={() => {
                     setInput(item.calculation);
+                    updateDisplayInput(item.calculation);
                     setResult(item.result);
                     setShowHistory(false);
                     triggerHaptic();
@@ -418,7 +434,7 @@ export default function IndexScreen() {
       )}
       
       <View style={styles.displayContainer}>
-        <Text style={styles.inputText}>{formatInputDisplay(input) || '0'}</Text>
+        <Text style={styles.inputText}>{displayInput || '0'}</Text>
         
         {/* Anında sonuç göster */}
         {instantResult && !result && (
