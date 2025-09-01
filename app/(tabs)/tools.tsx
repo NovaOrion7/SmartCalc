@@ -48,46 +48,47 @@ export default function ToolsScreen() {
     { id: 'base', title: t('base'), icon: 'calculator' as const },
   ];
 
-  const getCurrencies = () => [
-    { label: 'USD', value: 'USD', fullName: t('usdName') },
-    { label: 'EUR', value: 'EUR', fullName: t('eurName') },
-    { label: 'TRY', value: 'TRY', fullName: t('tryName') },
-    { label: 'GBP', value: 'GBP', fullName: t('gbpName') },
-    { label: 'JPY', value: 'JPY', fullName: t('jpyName') },
-    { label: 'CHF', value: 'CHF', fullName: t('chfName') },
-    { label: 'CAD', value: 'CAD', fullName: t('cadName') },
-    { label: 'AUD', value: 'AUD', fullName: t('audName') },
-    { label: 'SEK', value: 'SEK', fullName: t('sekName') },
-    { label: 'NOK', value: 'NOK', fullName: t('nokName') },
-    { label: 'DKK', value: 'DKK', fullName: t('dkkName') },
-    { label: 'PLN', value: 'PLN', fullName: t('plnName') },
-    { label: 'CZK', value: 'CZK', fullName: t('czkName') },
-    { label: 'HUF', value: 'HUF', fullName: t('hufName') },
-    { label: 'RUB', value: 'RUB', fullName: t('rubName') },
-    { label: 'CNY', value: 'CNY', fullName: t('cnyName') },
-    { label: 'INR', value: 'INR', fullName: t('inrName') },
-    { label: 'KRW', value: 'KRW', fullName: t('krwName') },
-    { label: 'SGD', value: 'SGD', fullName: t('sgdName') },
-    { label: 'HKD', value: 'HKD', fullName: t('hkdName') },
-    { label: 'MXN', value: 'MXN', fullName: t('mxnName') },
-    { label: 'BRL', value: 'BRL', fullName: t('brlName') },
-    { label: 'ZAR', value: 'ZAR', fullName: t('zarName') },
-    { label: 'NZD', value: 'NZD', fullName: t('nzdName') },
-    { label: 'ILS', value: 'ILS', fullName: t('ilsName') },
-    { label: 'THB', value: 'THB', fullName: t('thbName') },
-    { label: 'MYR', value: 'MYR', fullName: t('myrName') },
-    { label: 'PHP', value: 'PHP', fullName: t('phpName') },
-    { label: 'IDR', value: 'IDR', fullName: t('idrName') },
-    { label: 'SAR', value: 'SAR', fullName: t('sarName') },
-    { label: 'AED', value: 'AED', fullName: t('aedName') },
-    { label: 'EGP', value: 'EGP', fullName: t('egpName') },
-    { label: 'QAR', value: 'QAR', fullName: t('qarName') },
-    { label: 'KWD', value: 'KWD', fullName: t('kwdName') },
-    { label: 'BHD', value: 'BHD', fullName: t('bhdName') },
-    { label: 'OMR', value: 'OMR', fullName: t('omrName') },
-    { label: 'JOD', value: 'JOD', fullName: t('jodName') },
-    { label: 'LBP', value: 'LBP', fullName: t('lbpName') },
-  ];
+  const getCurrencies = () => {
+    // API'den gelen para birimlerine göre filtreleme yap
+    const availableCurrencies = [
+      { label: 'USD', value: 'USD', fullName: t('usdName') },
+      { label: 'EUR', value: 'EUR', fullName: t('eurName') },
+      { label: 'TRY', value: 'TRY', fullName: t('tryName') },
+      { label: 'GBP', value: 'GBP', fullName: t('gbpName') },
+      { label: 'JPY', value: 'JPY', fullName: t('jpyName') },
+      { label: 'CHF', value: 'CHF', fullName: t('chfName') },
+      { label: 'CAD', value: 'CAD', fullName: t('cadName') },
+      { label: 'AUD', value: 'AUD', fullName: t('audName') },
+      { label: 'SEK', value: 'SEK', fullName: t('sekName') },
+      { label: 'NOK', value: 'NOK', fullName: t('nokName') },
+      { label: 'DKK', value: 'DKK', fullName: t('dkkName') },
+      { label: 'PLN', value: 'PLN', fullName: t('plnName') },
+      { label: 'CZK', value: 'CZK', fullName: t('czkName') },
+      { label: 'HUF', value: 'HUF', fullName: t('hufName') },
+      { label: 'CNY', value: 'CNY', fullName: t('cnyName') },
+      { label: 'INR', value: 'INR', fullName: t('inrName') },
+      { label: 'KRW', value: 'KRW', fullName: t('krwName') },
+      { label: 'SGD', value: 'SGD', fullName: t('sgdName') },
+      { label: 'HKD', value: 'HKD', fullName: t('hkdName') },
+      { label: 'MXN', value: 'MXN', fullName: t('mxnName') },
+      { label: 'BRL', value: 'BRL', fullName: t('brlName') },
+      { label: 'ZAR', value: 'ZAR', fullName: t('zarName') },
+      { label: 'NZD', value: 'NZD', fullName: t('nzdName') },
+      { label: 'ILS', value: 'ILS', fullName: t('ilsName') },
+      { label: 'THB', value: 'THB', fullName: t('thbName') },
+      { label: 'MYR', value: 'MYR', fullName: t('myrName') },
+      { label: 'PHP', value: 'PHP', fullName: t('phpName') },
+      { label: 'IDR', value: 'IDR', fullName: t('idrName') },
+      { label: 'BGN', value: 'BGN', fullName: 'Bulgarian Lev' },
+      { label: 'RON', value: 'RON', fullName: 'Romanian Leu' },
+      { label: 'ISK', value: 'ISK', fullName: 'Icelandic Króna' },
+    ];
+
+    // Sadece API'den gelen para birimlerini döndür
+    return availableCurrencies.filter(currency => 
+      exchangeRates && exchangeRates[currency.value] !== undefined
+    );
+  };
 
   const getLengthUnits = () => [
     { label: t('meter'), value: 'meter', toMeter: 1 },
@@ -116,17 +117,18 @@ export default function ToolsScreen() {
         USD: 1,
       };
       
-      // Diğer dövizleri USD bazlı hesapla
+      // Diğer dövizleri USD bazlı hesapla - sadece API'den gelen kurları kullan
       Object.keys(data.rates).forEach(currency => {
         if (currency !== 'USD') {
           usdBasedRates[currency] = data.rates[currency] * eurToUsd;
         }
       });
       
+      console.log('API\'den gelen para birimleri:', Object.keys(usdBasedRates));
       setExchangeRates(usdBasedRates);
     } catch (error) {
       console.error('Döviz kurları alınamadı:', error);
-      // Hata durumunda varsayılan kurlar (yaklaşık değerler)
+      // Hata durumunda varsayılan kurlar (yaklaşık değerler) - sadece API'de desteklenen para birimleri
       setExchangeRates({
         USD: 1,
         EUR: 0.92,
@@ -142,7 +144,6 @@ export default function ToolsScreen() {
         PLN: 4.02,
         CZK: 22.4,
         HUF: 360,
-        RUB: 91,
         CNY: 7.24,
         INR: 83.1,
         KRW: 1340,
@@ -157,15 +158,9 @@ export default function ToolsScreen() {
         MYR: 4.47,
         PHP: 56.3,
         IDR: 15420,
-        SAR: 3.75,
-        AED: 3.67,
-        EGP: 48.5,
-        QAR: 3.64,
-        KWD: 0.31,
-        BHD: 0.38,
-        OMR: 0.38,
-        JOD: 0.71,
-        LBP: 89500,
+        BGN: 1.96,
+        RON: 4.97,
+        ISK: 138,
       });
     } finally {
       setLoading(false);

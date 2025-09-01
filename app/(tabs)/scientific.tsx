@@ -5,14 +5,14 @@ import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const buttons = [
@@ -300,18 +300,26 @@ export default function ScientificScreen() {
     instantResultBox: {
       backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
       borderRadius: 8,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      marginTop: 4,
+      paddingTop: 14,
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+      marginTop: 8,
       alignSelf: 'flex-end',
       minWidth: 60,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     instantResultText: {
       color: isDarkMode ? '#888' : '#666',
-      fontSize: 18,
+      fontSize: 15,
       textAlign: 'right',
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
       fontStyle: 'italic',
+      lineHeight: Platform.OS === 'android' ? 24 : 22,
+      includeFontPadding: false,
+      textAlignVertical: 'center',
+      paddingVertical: Platform.OS === 'android' ? 2 : 0,
     },
     resultContainer: {
       flexDirection: 'row',

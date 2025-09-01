@@ -221,20 +221,28 @@ export default function IndexScreen() {
         ? (highContrast ? '#444444' : '#2a2a2a') 
         : (highContrast ? '#e8e8e8' : '#f5f5f5'),
       borderRadius: 8,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-      marginTop: 4,
+      paddingTop: 14,
+      paddingBottom: 16,
+      paddingHorizontal: 16,
+      marginTop: 8,
       alignSelf: 'flex-end',
-      opacity: 0.8,
+      opacity: 0.9,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     instantResultText: {
       color: isDarkMode 
         ? (highContrast ? '#ffffff' : '#bbb') 
         : (highContrast ? '#000000' : '#666'),
-      fontSize: 20,
+      fontSize: 17,
       textAlign: 'right',
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
       fontStyle: 'italic',
+      lineHeight: Platform.OS === 'android' ? 26 : 24,
+      includeFontPadding: false,
+      textAlignVertical: 'center',
+      paddingVertical: Platform.OS === 'android' ? 2 : 0,
     },
     resultText: {
       color: isDarkMode 
