@@ -29,6 +29,13 @@ export default function ToolsScreen() {
 
   // Hisse tavan-taban hesaplayıcı için
   const [stockName, setStockName] = useState('');
+  
+  // Tarih hesaplayıcı için
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [daysBetweenResult, setDaysBetweenResult] = useState('');
+  const [addDaysResult, setAddDaysResult] = useState('');
+  const [subtractDaysResult, setSubtractDaysResult] = useState('');
   const [stockPrice, setStockPrice] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [stockResults, setStockResults] = useState<any>(null);
@@ -46,6 +53,7 @@ export default function ToolsScreen() {
     { id: 'stock', title: t('stock'), icon: 'line-chart' as const },
     { id: 'binary', title: t('binary'), icon: 'code' as const },
     { id: 'base', title: t('base'), icon: 'calculator' as const },
+    { id: 'date', title: t('dateCalculator'), icon: 'calendar' as const },
   ];
 
   const getCurrencies = () => {
@@ -236,6 +244,121 @@ export default function ToolsScreen() {
     const discountAmount = price * (discount / 100);
     const finalPrice = price - discountAmount;
     setResult(`${t('discountAmount')}: ${formatNumber(discountAmount)}\n${t('finalPrice')}: ${formatNumber(finalPrice)}`);
+    triggerHaptic();
+  };
+
+  // Tarih formatı için otomatik nokta ekleme
+  const formatDateInput = (text: string): string => {
+    // Sadece rakamları al
+    const numbers = text.replace(/[^0-9]/g, '');
+    
+    if (numbers.length <= 2) {
+      return numbers;
+    } else if (numbers.length <= 4) {
+      return numbers.slice(0, 2) + '.' + numbers.slice(2);
+    } else if (numbers.length <= 8) {
+      return numbers.slice(0, 2) + '.' + numbers.slice(2, 4) + '.' + numbers.slice(4, 8);
+    }
+    
+    return numbers.slice(0, 2) + '.' + numbers.slice(2, 4) + '.' + numbers.slice(4, 8);
+  };
+
+  // Tarih hesaplama fonksiyonları
+  const parseDate = (dateStr: string): Date | null => {
+    // DD.MM.YYYY formatını parse et
+    const parts = dateStr.split('.');
+    if (parts.length !== 3) return null;
+    
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // JavaScript months are 0-based
+    const year = parseInt(parts[2]);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    
+    const date = new Date(year, month, day);
+    // Validate the date
+    if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) {
+      return null;
+    }
+    
+    return date;
+  };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
+  const calculateDaysBetween = () => {
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+    
+    if (!start || !end) {
+      setDaysBetweenResult(t('enterValidDates'));
+      return;
+    }
+    
+    const timeDiff = end.getTime() - start.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    
+    let resultText = `${t('daysBetween')}: ${Math.abs(daysDiff)} ${t('day') || 'gün'}`;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (start.getTime() === today.getTime()) {
+      resultText += `\n${t('startDate')}: ${t('today')}`;
+    } else if (start.getTime() < today.getTime()) {
+      resultText += `\n${t('startDate')}: ${t('dateInPast')}`;
+    } else {
+      resultText += `\n${t('startDate')}: ${t('dateInFuture')}`;
+    }
+    
+    if (end.getTime() === today.getTime()) {
+      resultText += `\n${t('endDate')}: ${t('today')}`;
+    } else if (end.getTime() < today.getTime()) {
+      resultText += `\n${t('endDate')}: ${t('dateInPast')}`;
+    } else {
+      resultText += `\n${t('endDate')}: ${t('dateInFuture')}`;
+    }
+    
+    setDaysBetweenResult(resultText);
+    triggerHaptic();
+  };
+
+  const addDaysToDate = () => {
+    const baseDate = parseDate(startDate);
+    const days = parseInt(amount);
+    
+    if (!baseDate || isNaN(days)) {
+      setAddDaysResult(t('enterValidDates'));
+      return;
+    }
+    
+    const resultDate = new Date(baseDate);
+    resultDate.setDate(resultDate.getDate() + days);
+    
+    const resultText = `${t('resultDate')}: ${formatDate(resultDate)}`;
+    setAddDaysResult(resultText);
+    triggerHaptic();
+  };
+
+  const subtractDaysFromDate = () => {
+    const baseDate = parseDate(startDate);
+    const days = parseInt(amount);
+    
+    if (!baseDate || isNaN(days)) {
+      setSubtractDaysResult(t('enterValidDates'));
+      return;
+    }
+    
+    const resultDate = new Date(baseDate);
+    resultDate.setDate(resultDate.getDate() - days);
+    
+    const resultText = `${t('resultDate')}: ${formatDate(resultDate)}`;
+    setSubtractDaysResult(resultText);
     triggerHaptic();
   };
 
@@ -773,6 +896,105 @@ export default function ToolsScreen() {
             </TouchableOpacity>
           </View>
         );
+      case 'date':
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t('dateCalculator')}</Text>
+            
+            {/* Gün hesaplama bölümü */}
+            <View style={[styles.section, { marginBottom: 20 }]}>
+              <Text style={styles.subsectionTitle}>{t('calculateDays')}</Text>
+              <TextInput
+                style={[styles.input, { marginBottom: 8 }]}
+                placeholder={t('enterStartDate')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={startDate}
+                onChangeText={(text) => setStartDate(formatDateInput(text))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              <TextInput
+                style={[styles.input, { marginBottom: 12 }]}
+                placeholder={t('enterEndDate')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={endDate}
+                onChangeText={(text) => setEndDate(formatDateInput(text))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              <TouchableOpacity style={styles.button} onPress={calculateDaysBetween}>
+                <Text style={styles.buttonText}>{t('calculateDays')}</Text>
+              </TouchableOpacity>
+              {daysBetweenResult ? (
+                <View style={[styles.resultContainer, { marginTop: 12 }]}>
+                  <Text style={styles.resultText}>{daysBetweenResult}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Gün ekleme bölümü */}
+            <View style={[styles.section, { marginBottom: 20 }]}>
+              <Text style={styles.subsectionTitle}>{t('addDays')}</Text>
+              <TextInput
+                style={[styles.input, { marginBottom: 8 }]}
+                placeholder={t('enterStartDate')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={startDate}
+                onChangeText={(text) => setStartDate(formatDateInput(text))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              <TextInput
+                style={[styles.input, { marginBottom: 12 }]}
+                placeholder={t('enterDaysCount')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity style={styles.button} onPress={addDaysToDate}>
+                <Text style={styles.buttonText}>{t('addDays')}</Text>
+              </TouchableOpacity>
+              {addDaysResult ? (
+                <View style={[styles.resultContainer, { marginTop: 12 }]}>
+                  <Text style={styles.resultText}>{addDaysResult}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Gün çıkarma bölümü */}
+            <View style={[styles.section, { marginBottom: 20 }]}>
+              <Text style={styles.subsectionTitle}>{t('subtractDays')}</Text>
+              <TextInput
+                style={[styles.input, { marginBottom: 8 }]}
+                placeholder={t('enterStartDate')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={startDate}
+                onChangeText={(text) => setStartDate(formatDateInput(text))}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+              <TextInput
+                style={[styles.input, { marginBottom: 12 }]}
+                placeholder={t('enterDaysCount')}
+                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity style={styles.button} onPress={subtractDaysFromDate}>
+                <Text style={styles.buttonText}>{t('subtractDays')}</Text>
+              </TouchableOpacity>
+              {subtractDaysResult ? (
+                <View style={[styles.resultContainer, { marginTop: 12 }]}>
+                  <Text style={styles.resultText}>{subtractDaysResult}</Text>
+                </View>
+              ) : null}
+            </View>
+
+
+          </View>
+        );
       case 'base':
         return (
           <View>
@@ -1198,6 +1420,35 @@ export default function ToolsScreen() {
       fontSize: 12,
       fontWeight: '600',
     },
+    // Date calculator styles
+    section: {
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      borderRadius: 12,
+      padding: 15,
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#444' : '#e9ecef',
+    },
+    subsectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: isDarkMode ? '#fff' : '#000',
+      marginBottom: 12,
+      textAlign: 'center',
+    },
+    resultContainer: {
+      backgroundColor: isDarkMode ? '#1a472a' : '#d4edda',
+      borderRadius: 12,
+      padding: 15,
+      borderWidth: 1,
+      borderColor: isDarkMode ? '#28a745' : '#c3e6cb',
+    },
+    resultTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: isDarkMode ? '#28a745' : '#155724',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
   });
 
   const styles = getStyles();
@@ -1234,6 +1485,11 @@ export default function ToolsScreen() {
                 setStockQuantity('');
                 setStockResults(null);
                 setBinaryInput('');
+                setStartDate('');
+                setEndDate('');
+                setDaysBetweenResult('');
+                setAddDaysResult('');
+                setSubtractDaysResult('');
               }}
             >
               <FontAwesome 

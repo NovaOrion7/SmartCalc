@@ -198,6 +198,25 @@ const translations = {
     deleteNoteConfirm: 'Bu notu silmek istediğinizden emin misiniz?',
     noteHint: 'Bu sonuca not ekleyebilirsiniz',
     
+    // Tarih Hesaplayıcı
+    dateCalculator: 'Tarih Hesaplayıcı',
+    startDate: 'Başlangıç Tarihi',
+    endDate: 'Bitiş Tarihi',
+    calculateDays: 'Gün Hesapla',
+    daysBetween: 'Aralarındaki Gün',
+    addDays: 'Gün Ekle',
+    subtractDays: 'Gün Çıkar',
+    daysToAdd: 'Eklenecek Gün Sayısı',
+    resultDate: 'Sonuç Tarihi',
+    enterStartDate: 'Başlangıç (GG.AA.YYYY)',
+    enterEndDate: 'Bitiş (GG.AA.YYYY)',
+    enterValidDates: 'Geçerli tarihler girin',
+    enterDaysCount: 'Gün sayısı girin',
+    dateInPast: 'Tarih geçmişte',
+    dateInFuture: 'Tarih gelecekte',
+    today: 'Bugün',
+    day: 'gün',
+    
     // Uygulama Bilgileri
     application: 'Uygulama',
     developer: 'Geliştirici: Nova Orion',
@@ -397,6 +416,25 @@ const translations = {
     noNoteText: 'No note for this calculation',
     deleteNoteConfirm: 'Are you sure you want to delete this note?',
     noteHint: 'You can add a note to this result',
+    
+    // Date Calculator
+    dateCalculator: 'Date Calculator',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    calculateDays: 'Calculate Days',
+    daysBetween: 'Days Between',
+    addDays: 'Add Days',
+    subtractDays: 'Subtract Days',
+    daysToAdd: 'Number of Days to Add',
+    resultDate: 'Result Date',
+    enterStartDate: 'Start (DD.MM.YYYY)',
+    enterEndDate: 'End (DD.MM.YYYY)',
+    enterValidDates: 'Enter valid dates',
+    enterDaysCount: 'Enter number of days',
+    dateInPast: 'Date is in the past',
+    dateInFuture: 'Date is in the future',
+    today: 'Today',
+    day: 'day',
     
     // Application Information
     application: 'Application',
