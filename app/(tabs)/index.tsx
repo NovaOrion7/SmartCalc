@@ -44,7 +44,7 @@ export default function IndexScreen() {
         return;
       }
 
-      let expr = input.replace(/\^/g, '^').replace(/π/g, 'pi');
+      let expr = input.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
       if (defaultAngleUnit === 'degree') {
         expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => `${fn}(((${arg}) * pi / 180))`);
       }
@@ -61,7 +61,7 @@ export default function IndexScreen() {
     
     if (value === '=') {
       try {
-        let expr = input.replace(/\^/g, '^').replace(/π/g, 'pi');
+        let expr = input.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
         if (defaultAngleUnit === 'degree') {
           // sin(x), cos(x), tan(x) fonksiyonlarının argümanlarını derece modunda radyana çevir
           expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => `${fn}(((${arg}) * pi / 180))`);
@@ -78,56 +78,38 @@ export default function IndexScreen() {
         setResult(t('calculationError'));
         setInstantResult('');
       }
-    } else if (value === 'C') {
+    } else if (value === 'AC') {
       setInput('');
       setDisplayInput('');
       setResult('');
-      setInstantResult('');
-    } else if (value === 'CE') {
-      setInput('');
-      setDisplayInput('');
       setInstantResult('');
     } else if (value === '⌫') {
       const newInput = input.slice(0, -1);
       setInput(newInput);
       updateDisplayInput(newInput);
       calculateInstantResult(newInput);
-    } else if (value === '+/-') {
-      if (input) {
-        const newInput = input.startsWith('-') ? input.slice(1) : '-' + input;
-        setInput(newInput);
-        updateDisplayInput(newInput);
-        calculateInstantResult(newInput);
-      }
-    } else if (value === '1/x') {
-      const newInput = input + '1/(';
+    } else if (value === '( )') {
+      // Parantez mantığı - açık parantez sayısını kontrol et
+      const openParens = (input.match(/\(/g) || []).length;
+      const closeParens = (input.match(/\)/g) || []).length;
+      const newInput = openParens > closeParens ? input + ')' : input + '(';
       setInput(newInput);
       updateDisplayInput(newInput);
       calculateInstantResult(newInput);
-    } else if (value === 'x^2') {
-      const newInput = input + '^2';
+    } else if (value === '%') {
+      const newInput = input + '/100';
       setInput(newInput);
-      updateDisplayInput(newInput);
+      updateDisplayInput(input + '%');
       calculateInstantResult(newInput);
-    } else if (value === '√') {
-      const newInput = input + 'sqrt(';
+    } else if (value === '×') {
+      const newInput = input + '*';
       setInput(newInput);
-      updateDisplayInput(newInput);
+      updateDisplayInput(input + '×');
       calculateInstantResult(newInput);
-    } else if (['sin', 'cos', 'tan', 'log', 'ln'].includes(value)) {
-      const newInput = input + value + '(';
+    } else if (value === '÷') {
+      const newInput = input + '/';
       setInput(newInput);
-      updateDisplayInput(newInput);
-      calculateInstantResult(newInput);
-    } else if (value === 'π') {
-      const newInput = input + 'pi';
-      setInput(newInput);
-      updateDisplayInput(newInput);
-      calculateInstantResult(newInput);
-    } else if (value === 'e') {
-      const newInput = input + 'e';
-      setInput(newInput);
-      updateDisplayInput(newInput);
+      updateDisplayInput(input + '÷');
       calculateInstantResult(newInput);
     } else {
       const newInput = input + value;
@@ -200,15 +182,14 @@ export default function IndexScreen() {
   };
 
   const buttons = [
-    ['(', ')', '^', '/'],
-    ['7', '8', '9', '*'],
+    ['AC', '( )', '%', '÷'],
+    ['7', '8', '9', '×'],
     ['4', '5', '6', '-'],
     ['1', '2', '3', '+'],
-    ['0', '⌫', 'C', '.'],
-    ['='],
+    ['0', '.', '⌫', '='],
   ];
 
-  const FUNCTION_KEYS = ['C', '=', '+', '-', '*', '/', '^', '(', ')', '⌫'];
+  const FUNCTION_KEYS = ['AC', '=', '+', '-', '×', '÷', '%', '( )', '⌫'];
 
   const getStyles = () => StyleSheet.create({
     container: {
@@ -216,39 +197,53 @@ export default function IndexScreen() {
       backgroundColor: isDarkMode 
         ? (highContrast ? '#000000' : '#181818') 
         : (highContrast ? '#ffffff' : '#f5f5f5'),
-      justifyContent: 'flex-start',
-      padding: 20,
+      paddingHorizontal: 10,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
+      justifyContent: 'space-between',
     },
     displayContainer: {
-      marginBottom: 18,
-      minHeight: 90,
+      minHeight: 180,
+      maxHeight: 250,
+      marginBottom: 30,
+      paddingHorizontal: 20,
+      paddingTop: 20,
+    },
+    displayScrollView: {
+      flex: 1,
+    },
+    displayScrollContent: {
+      flexGrow: 1,
       justifyContent: 'flex-end',
+      paddingBottom: 10,
     },
     inputText: {
       color: isDarkMode 
         ? (highContrast ? '#ffffff' : '#bbb') 
         : (highContrast ? '#000000' : '#333'),
-      fontSize: 30,
+      fontSize: 22,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-      marginBottom: 2,
+      marginBottom: 5,
+      lineHeight: 28,
+      flexShrink: 1,
     },
     resultBox: {
       backgroundColor: isDarkMode 
         ? (highContrast ? '#333333' : '#232323') 
         : (highContrast ? '#f0f0f0' : '#e0e0e0'),
       borderRadius: 10,
-      paddingVertical: 6,
-      paddingHorizontal: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
       marginTop: 6,
       flex: 1,
+      minHeight: 50,
     },
     resultContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'flex-end',
-      marginTop: 10,
+      marginTop: 15,
+      marginBottom: 10,
     },
     resultButtons: {
       flexDirection: 'row',
@@ -274,7 +269,8 @@ export default function IndexScreen() {
       paddingTop: 14,
       paddingBottom: 16,
       paddingHorizontal: 16,
-      marginTop: 8,
+      marginTop: 15,
+      marginBottom: 10,
       alignSelf: 'flex-end',
       opacity: 0.9,
       minHeight: 48,
@@ -285,22 +281,25 @@ export default function IndexScreen() {
       color: isDarkMode 
         ? (highContrast ? '#ffffff' : '#bbb') 
         : (highContrast ? '#000000' : '#666'),
-      fontSize: 17,
+      fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
       fontStyle: 'italic',
-      lineHeight: Platform.OS === 'android' ? 26 : 24,
+      lineHeight: Platform.OS === 'android' ? 18 : 16,
       includeFontPadding: false,
       textAlignVertical: 'center',
       paddingVertical: Platform.OS === 'android' ? 2 : 0,
+      flexShrink: 1,
     },
     resultText: {
       color: isDarkMode 
         ? (highContrast ? '#ffffff' : '#fff') 
         : (highContrast ? '#000000' : '#000'),
-      fontSize: 32,
+      fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      lineHeight: 22,
+      flexShrink: 1,
     },
     copyHint: {
       color: isDarkMode ? '#999' : '#666',
@@ -309,41 +308,60 @@ export default function IndexScreen() {
       marginTop: 4,
       fontStyle: 'italic',
     },
-    keypadScroll: { paddingBottom: 30 },
-    row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    keypadContainer: { 
+      justifyContent: 'flex-end',
+      paddingBottom: 20,
+      marginTop: 'auto',
+    },
+    row: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-evenly', 
+      marginBottom: 12,
+      paddingHorizontal: 15,
+    },
     button: {
-      flex: 1,
-      margin: 3,
-      borderRadius: 16,
-      minWidth: 0,
+      width: 70,
+      height: 70,
+      borderRadius: 35,
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: isDarkMode ? 0.22 : 0.1,
-      shadowRadius: 6,
-      elevation: 4,
-      backgroundColor: isDarkMode ? '#232323' : '#fff',
-      paddingVertical: 16,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
+      elevation: 3,
+      marginHorizontal: 2,
     },
     numberButton: {
-      backgroundColor: isDarkMode ? '#232323' : '#fff',
+      backgroundColor: isDarkMode ? '#333333' : '#fff',
     },
     functionButton: {
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
-      borderWidth: 1,
-      borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+      backgroundColor: isDarkMode ? '#a6a6a6' : '#e0e0e0',
+    },
+    specialButton: {
+      backgroundColor: isDarkMode ? '#a6a6a6' : '#d4d4d2',
+    },
+    equalsButton: {
+      backgroundColor: isDarkMode ? '#ff9500' : '#ff9500',
     },
     buttonText: {
-      fontSize: 18,
+      fontSize: 24,
       textAlign: 'center',
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontWeight: '400',
     },
     numberButtonText: {
       color: isDarkMode ? '#fff' : '#000',
     },
     functionButtonText: {
-      color: isDarkMode ? '#ffb300' : '#fff',
+      color: isDarkMode ? '#fff' : '#000',
+      fontWeight: '400',
+    },
+    specialButtonText: {
+      color: '#000',
+      fontWeight: '400',
+    },
+    equalsButtonText: {
+      color: '#fff',
       fontWeight: '600',
     },
     historyPanel: {
@@ -399,15 +417,6 @@ export default function IndexScreen() {
       color: isDarkMode ? '#fff' : '#000',
       fontSize: 16,
       fontWeight: 'bold',
-    },
-    lastRow: {
-      justifyContent: 'center',
-    },
-    equalsButton: {
-      flex: 0,
-      minWidth: 200,
-      backgroundColor: '#007AFF',
-      borderColor: '#0056cc',
     },
     historyItemHeader: {
       flexDirection: 'row',
@@ -519,46 +528,60 @@ export default function IndexScreen() {
       )}
       
       <View style={styles.displayContainer}>
-        <Text style={styles.inputText}>{displayInput || '0'}</Text>
-        
-        {/* Anında sonuç göster */}
-        {instantResult && !result && (
-          <View style={styles.instantResultBox}>
-            <Text style={styles.instantResultText}>= {instantResult}</Text>
-          </View>
-        )}
-        
-        {/* Nihai sonuç ve butonlar */}
-        {result !== '' && (
-          <View style={styles.resultContainer}>
-            <View style={styles.resultBox}>
-              <Text style={styles.resultText}>= {result}</Text>
+        <ScrollView 
+          style={styles.displayScrollView}
+          contentContainerStyle={styles.displayScrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <Text style={styles.inputText}>{displayInput || '0'}</Text>
+          
+          {/* Anında sonuç göster */}
+          {instantResult && !result && (
+            <View style={styles.instantResultBox}>
+              <Text style={styles.instantResultText}>= {instantResult}</Text>
             </View>
-            <View style={styles.resultButtons}>
-              <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
-                <FontAwesome name="copy" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={handleAddNote}>
-                <FontAwesome name="sticky-note" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
-                <FontAwesome name="plus" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
-              </TouchableOpacity>
+          )}
+          
+          {/* Nihai sonuç ve butonlar */}
+          {result !== '' && (
+            <View style={styles.resultContainer}>
+              <View style={styles.resultBox}>
+                <Text style={styles.resultText}>= {result}</Text>
+              </View>
+              <View style={styles.resultButtons}>
+                <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
+                  <FontAwesome name="copy" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton} onPress={handleAddNote}>
+                  <FontAwesome name="sticky-note" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
+                  <FontAwesome name="plus" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        )}
+          )}
+        </ScrollView>
       </View>
-      <ScrollView contentContainerStyle={styles.keypadScroll} showsVerticalScrollIndicator={false}>
+      <View style={styles.keypadContainer}>
         {buttons.map((row, i) => (
-          <View key={i} style={[styles.row, i === buttons.length - 1 ? styles.lastRow : null]}>
-            {row.map((value, j) =>
-              value ? (
+          <View key={i} style={styles.row}>
+            {row.map((value, j) => {
+              const isSpecial = ['AC', '( )', '%'].includes(value);
+              const isEquals = value === '=';
+              const isFunction = FUNCTION_KEYS.includes(value) && !isSpecial && !isEquals;
+              const isNumber = !FUNCTION_KEYS.includes(value);
+              
+              return value ? (
                 <TouchableOpacity
                   key={value + i + j}
                   style={[
                     styles.button,
-                    FUNCTION_KEYS.includes(value) ? styles.functionButton : styles.numberButton,
-                    i === buttons.length - 1 ? styles.equalsButton : null,
+                    isNumber ? styles.numberButton : null,
+                    isFunction ? styles.functionButton : null,
+                    isSpecial ? styles.specialButton : null,
+                    isEquals ? styles.equalsButton : null,
                   ]}
                   activeOpacity={0.7}
                   onPress={() => handlePress(value)}
@@ -566,19 +589,20 @@ export default function IndexScreen() {
                   <Text
                     style={[
                       styles.buttonText,
-                      FUNCTION_KEYS.includes(value) ? styles.functionButtonText : styles.numberButtonText,
+                      isNumber ? styles.numberButtonText : null,
+                      isFunction ? styles.functionButtonText : null,
+                      isSpecial ? styles.specialButtonText : null,
+                      isEquals ? styles.equalsButtonText : null,
                     ]}
                   >
                     {value}
                   </Text>
                 </TouchableOpacity>
-              ) : (
-                <View key={j} style={[styles.button, { backgroundColor: 'transparent' }]} />
-              )
-            )}
+              ) : null;
+            })}
           </View>
         ))}
-      </ScrollView>
+      </View>
       
       <NoteModal
         visible={showNoteModal}

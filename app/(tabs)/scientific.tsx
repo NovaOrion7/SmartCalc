@@ -6,14 +6,14 @@ import { useNavigation } from 'expo-router';
 import { Parser } from 'expr-eval';
 import React, { useLayoutEffect, useState } from 'react';
 import {
-    Alert,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 const buttons = [
@@ -337,10 +337,12 @@ export default function ScientificScreen() {
     },
     inputText: {
       color: isDarkMode ? '#bbb' : '#333',
-      fontSize: 28,
+      fontSize: 22,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
       marginBottom: 2,
+      lineHeight: 28,
+      flexShrink: 1,
     },
     resultBox: {
       backgroundColor: isDarkMode ? '#232323' : '#e0e0e0',
@@ -366,14 +368,15 @@ export default function ScientificScreen() {
     },
     instantResultText: {
       color: isDarkMode ? '#888' : '#666',
-      fontSize: 15,
+      fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
       fontStyle: 'italic',
-      lineHeight: Platform.OS === 'android' ? 24 : 22,
+      lineHeight: Platform.OS === 'android' ? 18 : 16,
       includeFontPadding: false,
       textAlignVertical: 'center',
       paddingVertical: Platform.OS === 'android' ? 2 : 0,
+      flexShrink: 1,
     },
     resultContainer: {
       flexDirection: 'row',
@@ -397,9 +400,11 @@ export default function ScientificScreen() {
     },
     resultText: {
       color: isDarkMode ? '#fff' : '#000',
-      fontSize: 30,
+      fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      lineHeight: 22,
+      flexShrink: 1,
     },
     copyHint: {
       color: isDarkMode ? '#999' : '#666',
