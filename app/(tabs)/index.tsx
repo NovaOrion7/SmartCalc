@@ -636,17 +636,22 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
   onHistoryPress: () => void;
   historyCount: number;
 }) {
+  const { highContrast } = useSettings();
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
       paddingHorizontal: 18,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0',
+      borderBottomColor: isDarkMode 
+        ? (highContrast ? '#666666' : '#232323') 
+        : (highContrast ? '#cccccc' : '#e0e0e0'),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.08 : 0.05,
@@ -658,7 +663,9 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
       alignItems: 'center',
     },
     headerTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
@@ -666,13 +673,17 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
     historyButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#666666' : '#333') 
+        : (highContrast ? '#cccccc' : '#e0e0e0'),
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 15,
     },
     historyCount: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 12,
       marginLeft: 5,
       fontWeight: 'bold',

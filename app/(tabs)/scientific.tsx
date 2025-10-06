@@ -29,23 +29,28 @@ const buttons = [
 
 const FUNCTION_KEYS = ['C', '⌫', '=', '+/-', 'mod', 'n!', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', '√', 'x^2', 'x^y', '10^x', '|x|', '1/x'];
 
-function Header({ title, isDarkMode, onHistoryPress, historyCount }: { 
+function Header({ title, isDarkMode, onHistoryPress, historyCount, highContrast }: { 
   title: string; 
   isDarkMode: boolean; 
   onHistoryPress: () => void;
   historyCount: number;
+  highContrast: boolean;
 }) {
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: isDarkMode ? '#181818' : '#f5f5f5',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#000000' : '#181818') 
+        : (highContrast ? '#ffffff' : '#f5f5f5'),
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
       paddingHorizontal: 18,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0',
+      borderBottomColor: isDarkMode 
+        ? (highContrast ? '#666666' : '#232323') 
+        : (highContrast ? '#cccccc' : '#e0e0e0'),
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: isDarkMode ? 0.08 : 0.05,
@@ -57,7 +62,9 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
       alignItems: 'center',
     },
     headerTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
@@ -65,13 +72,17 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
     historyButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: isDarkMode ? '#333' : '#e0e0e0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#666666' : '#333') 
+        : (highContrast ? '#cccccc' : '#e0e0e0'),
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 15,
     },
     historyCount: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#fff') 
+        : (highContrast ? '#000000' : '#000'),
       fontSize: 12,
       marginLeft: 5,
       fontWeight: 'bold',
@@ -336,7 +347,9 @@ export default function ScientificScreen() {
       justifyContent: 'flex-end',
     },
     inputText: {
-      color: isDarkMode ? '#bbb' : '#333',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#bbb') 
+        : (highContrast ? '#000000' : '#333'),
       fontSize: 22,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -345,7 +358,9 @@ export default function ScientificScreen() {
       flexShrink: 1,
     },
     resultBox: {
-      backgroundColor: isDarkMode ? '#232323' : '#e0e0e0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#333333' : '#232323') 
+        : (highContrast ? '#f0f0f0' : '#e0e0e0'),
       borderRadius: 10,
       paddingVertical: 6,
       paddingHorizontal: 10,
@@ -354,7 +369,9 @@ export default function ScientificScreen() {
       minWidth: 90,
     },
     instantResultBox: {
-      backgroundColor: isDarkMode ? '#1a1a1a' : '#f0f0f0',
+      backgroundColor: isDarkMode 
+        ? (highContrast ? '#444444' : '#1a1a1a') 
+        : (highContrast ? '#e8e8e8' : '#f0f0f0'),
       borderRadius: 8,
       paddingTop: 14,
       paddingBottom: 16,
@@ -367,7 +384,9 @@ export default function ScientificScreen() {
       justifyContent: 'center',
     },
     instantResultText: {
-      color: isDarkMode ? '#888' : '#666',
+      color: isDarkMode 
+        ? (highContrast ? '#ffffff' : '#888') 
+        : (highContrast ? '#000000' : '#666'),
       fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
@@ -569,6 +588,7 @@ export default function ScientificScreen() {
         <Header 
           title={t('scientific')} 
           isDarkMode={isDarkMode} 
+          highContrast={highContrast}
           onHistoryPress={() => setShowHistory(!showHistory)}
           historyCount={getScientificHistory().length}
         />
