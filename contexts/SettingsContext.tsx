@@ -216,11 +216,25 @@ const translations = {
     dateInFuture: 'Tarih gelecekte',
     today: 'Bugün',
     day: 'gün',
+    days: 'gün',
+    year: 'yıl',
+    years: 'yıl',
+    month: 'ay',
+    months: 'ay',
+    week: 'hafta',
+    weeks: 'hafta',
+    detailed: 'Detaylı',
+    dateStatus: 'Tarih Durumu',
+    weekDisplay: 'Hafta',
     
     // Uygulama Bilgileri
     application: 'Uygulama',
     developer: 'Geliştirici: Nova Orion',
     success: 'Başarılı',
+    rateApp: 'Uygulamayı Oyla',
+    rateAppDesc: 'Play Store\'da beğenin ve yıldız verin',
+    moreApps: 'Diğer Uygulamalarım',
+    moreAppsDesc: 'Geliştirici sayfasına göz atın',
   },
   en: {
     // Calculator
@@ -435,11 +449,25 @@ const translations = {
     dateInFuture: 'Date is in the future',
     today: 'Today',
     day: 'day',
+    days: 'days',
+    year: 'year',
+    years: 'years',
+    month: 'month',
+    months: 'months',
+    week: 'week',
+    weeks: 'weeks',
+    detailed: 'Detailed',
+    dateStatus: 'Date Status',
+    weekDisplay: 'Week',
     
     // Application Information
     application: 'Application',
     developer: 'Developer: Nova Orion',
     success: 'Success',
+    rateApp: 'Rate App',
+    rateAppDesc: 'Rate and review us on Play Store',
+    moreApps: 'More Apps',
+    moreAppsDesc: 'Check out developer page',
   }
 };
 

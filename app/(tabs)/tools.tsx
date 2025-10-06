@@ -300,14 +300,73 @@ export default function ToolsScreen() {
       return;
     }
     
-    const timeDiff = end.getTime() - start.getTime();
-    const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    // Tarihleri sırala (start her zaman end'den küçük olsun)
+    const earlierDate = start <= end ? start : end;
+    const laterDate = start <= end ? end : start;
     
-    let resultText = `${t('daysBetween')}: ${Math.abs(daysDiff)} ${t('day') || 'gün'}`;
+    // Tam gün farkı hesapla
+    const timeDiff = laterDate.getTime() - earlierDate.getTime();
+    const totalDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     
+    // Yıl, ay, gün hesaplama
+    let years = laterDate.getFullYear() - earlierDate.getFullYear();
+    let months = laterDate.getMonth() - earlierDate.getMonth();
+    let days = laterDate.getDate() - earlierDate.getDate();
+    
+    // Negatif değerleri düzelt
+    if (days < 0) {
+      months--;
+      const daysInPreviousMonth = new Date(laterDate.getFullYear(), laterDate.getMonth(), 0).getDate();
+      days += daysInPreviousMonth;
+    }
+    
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    
+    // Hafta hesaplama
+    const weeks = Math.floor(totalDays / 7);
+    const remainingDays = totalDays % 7;
+    
+    // Sonuç metnini oluştur
+    let resultText = `📅 ${t('daysBetween')}: ${totalDays} ${totalDays === 1 ? t('day') : t('days')}`;
+    
+    // Detaylı hesaplama ekle
+    if (years > 0 || months > 0 || days > 0) {
+      resultText += `\n\n📊 ${t('detailed')}:`;
+      const parts = [];
+      
+      if (years > 0) {
+        parts.push(`${years} ${years === 1 ? t('year') : t('years')}`);
+      }
+      if (months > 0) {
+        parts.push(`${months} ${months === 1 ? t('month') : t('months')}`);
+      }
+      if (days > 0) {
+        parts.push(`${days} ${days === 1 ? t('day') : t('days')}`);
+      }
+      
+      if (parts.length > 0) {
+        resultText += `\n${parts.join(', ')}`;
+      }
+    }
+    
+    // Hafta hesaplama ekle
+    if (weeks > 0) {
+      resultText += `\n\n📆 ${t('weekDisplay')}: ${weeks} ${weeks === 1 ? t('week') : t('weeks')}`;
+      if (remainingDays > 0) {
+        resultText += `, ${remainingDays} ${remainingDays === 1 ? t('day') : t('days')}`;
+      }
+    }
+    
+    // Tarih durumu bilgisi
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    resultText += `\n\n📍 ${t('dateStatus')}:`;
+    
+    // Orijinal start tarihi durumu
     if (start.getTime() === today.getTime()) {
       resultText += `\n${t('startDate')}: ${t('today')}`;
     } else if (start.getTime() < today.getTime()) {
@@ -316,6 +375,7 @@ export default function ToolsScreen() {
       resultText += `\n${t('startDate')}: ${t('dateInFuture')}`;
     }
     
+    // Orijinal end tarihi durumu
     if (end.getTime() === today.getTime()) {
       resultText += `\n${t('endDate')}: ${t('today')}`;
     } else if (end.getTime() < today.getTime()) {

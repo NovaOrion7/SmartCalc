@@ -1,7 +1,7 @@
 import { useSettings } from '@/contexts/SettingsContext';
 import { useNavigation } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import { Alert, Animated, Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
@@ -19,9 +19,38 @@ export default function SettingsScreen() {
     t
   } = useSettings();
 
+  // Animation refs
+  const rateButtonScale = useRef(new Animated.Value(1)).current;
+  const moreAppsButtonScale = useRef(new Animated.Value(1)).current;
+
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  // Start animations
+  useEffect(() => {
+    // Rate button pulsing animation (simpler)
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(rateButtonScale, {
+          toValue: 1.05,
+          duration: 1500,
+          useNativeDriver: false, // Changed to false for compatibility
+        }),
+        Animated.timing(rateButtonScale, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: false, // Changed to false for compatibility
+        }),
+      ])
+    );
+
+    pulseAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+    };
+  }, [rateButtonScale]);
 
   const handleDarkModeToggle = (value: boolean) => {
     triggerHaptic();
@@ -122,6 +151,50 @@ export default function SettingsScreen() {
         }
       ]
     );
+  };
+
+  const rateApp = () => {
+    triggerHaptic();
+    // Press animation
+    Animated.sequence([
+      Animated.timing(rateButtonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: false,
+      }),
+      Animated.timing(rateButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.ismailjacob.SmartCalc';
+    Linking.openURL(playStoreUrl).catch(() => {
+      Alert.alert(t('error'), 'Play Store açılamıyor.');
+    });
+  };
+
+  const moreApps = () => {
+    triggerHaptic();
+    // Press animation
+    Animated.sequence([
+      Animated.timing(moreAppsButtonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: false,
+      }),
+      Animated.timing(moreAppsButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: false,
+      }),
+    ]).start();
+
+    const developerUrl = 'https://play.google.com/store/apps/dev?id=6946359108152061435';
+    Linking.openURL(developerUrl).catch(() => {
+      Alert.alert(t('error'), 'Play Store açılamıyor.');
+    });
   };
 
   const styles = StyleSheet.create({
@@ -231,6 +304,20 @@ export default function SettingsScreen() {
     },
     resetButton: {
       backgroundColor: '#FF3B30',
+      borderRadius: 12,
+      padding: 15,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    rateButton: {
+      backgroundColor: '#34C759',
+      borderRadius: 12,
+      padding: 15,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    moreAppsButton: {
+      backgroundColor: '#007AFF',
       borderRadius: 12,
       padding: 15,
       alignItems: 'center',
@@ -429,6 +516,27 @@ export default function SettingsScreen() {
         {/* Uygulama Bilgileri */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('application')}</Text>
+          
+          <Animated.View
+            style={{
+              transform: [{ scale: rateButtonScale }],
+            }}
+          >
+            <TouchableOpacity style={styles.rateButton} onPress={rateApp}>
+              <Text style={styles.buttonText}>⭐ {t('rateApp')}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View
+            style={{
+              transform: [{ scale: moreAppsButtonScale }],
+            }}
+          >
+            <TouchableOpacity style={styles.moreAppsButton} onPress={moreApps}>
+              <Text style={styles.buttonText}>📱 {t('moreApps')}</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          
           <Text style={styles.versionText}>SmartCalc v1.0.0</Text>
           <Text style={styles.developerText}>{t('developer')}</Text>
         </View>
