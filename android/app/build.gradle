@@ -93,8 +93,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep this in sync with app.json `expo.version` / `android.versionCode`
-        versionCode 10
-        versionName "1.0.7"
+        versionCode 11
+        versionName "1.0.8"
     }
     signingConfigs {
         debug {
@@ -122,8 +122,16 @@ android {
             signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
+            
+            // Generate mapping file for crash reports and debugging
+            if (enableProguardInReleaseBuilds) {
+                // Mapping file will be generated at app/build/outputs/mapping/release/mapping.txt
+                // This file should be uploaded to Google Play Console
+                debuggable false
+                zipAlignEnabled true
+            }
         }
     }
     packagingOptions {

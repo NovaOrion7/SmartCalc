@@ -537,7 +537,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </Animated.View>
           
-          <Text style={styles.versionText}>SmartCalc v1.0.7</Text>
+          <Text style={styles.versionText}>SmartCalc v1.0.8</Text>
           <Text style={styles.developerText}>{t('developer')}</Text>
         </View>
       </ScrollView>
