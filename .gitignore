@@ -10,13 +10,35 @@ web-build/
 expo-env.d.ts
 
 # Native
-.kotlin/
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+
+# Android/IntelliJ
+android/app/build/
+android/build/
+android/gradle
+android/gradlew
+android/gradlew.bat
+android/local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+
+# iOS
+ios/build/
+ios/DerivedData/
+ios/pods/
+ios/*.xcworkspace
+ios/*.xcodeproj
+
+# Kotlin
+.kotlin/
 
 # Metro
 .metro-health-check*

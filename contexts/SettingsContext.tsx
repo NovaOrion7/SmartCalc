@@ -183,6 +183,21 @@ const translations = {
     decimal: 'Ondalık',
     octal: 'Sekizlik',
     
+    // Not Ekleme
+    addNote: 'Not Ekle',
+    note: 'Not',
+    notes: 'Notlar',
+    editNote: 'Notu Düzenle',
+    deleteNote: 'Notu Sil',
+    saveNote: 'Notu Kaydet',
+    noteAdded: 'Not eklendi',
+    noteUpdated: 'Not güncellendi',
+    noteDeleted: 'Not silindi',
+    enterNote: 'Notunuzu girin',
+    noNoteText: 'Bu hesaplama için not yok',
+    deleteNoteConfirm: 'Bu notu silmek istediğinizden emin misiniz?',
+    noteHint: 'Bu sonuca not ekleyebilirsiniz',
+    
     // Uygulama Bilgileri
     application: 'Uygulama',
     developer: 'Geliştirici: Nova Orion',
@@ -368,6 +383,21 @@ const translations = {
     decimal: 'Decimal',
     octal: 'Octal',
     
+    // Note Adding
+    addNote: 'Add Note',
+    note: 'Note',
+    notes: 'Notes',
+    editNote: 'Edit Note',
+    deleteNote: 'Delete Note',
+    saveNote: 'Save Note',
+    noteAdded: 'Note added',
+    noteUpdated: 'Note updated',
+    noteDeleted: 'Note deleted',
+    enterNote: 'Enter your note',
+    noNoteText: 'No note for this calculation',
+    deleteNoteConfirm: 'Are you sure you want to delete this note?',
+    noteHint: 'You can add a note to this result',
+    
     // Application Information
     application: 'Application',
     developer: 'Developer: Nova Orion',
@@ -387,11 +417,17 @@ interface SettingsContextType {
   triggerHaptic: () => void;
   formatNumber: (num: number) => string;
   addToHistory: (calculation: string, result: string) => void;
-  getHistory: () => { calculation: string; result: string; timestamp: Date }[];
+  getHistory: () => { calculation: string; result: string; timestamp: Date; note?: string }[];
   clearHistory: () => void;
   addToScientificHistory: (calculation: string, result: string) => void;
-  getScientificHistory: () => { calculation: string; result: string; timestamp: Date }[];
+  getScientificHistory: () => { calculation: string; result: string; timestamp: Date; note?: string }[];
   clearScientificHistory: () => void;
+  addNoteToHistory: (index: number, note: string) => void;
+  updateNoteInHistory: (index: number, note: string) => void;
+  deleteNoteFromHistory: (index: number) => void;
+  addNoteToScientificHistory: (index: number, note: string) => void;
+  updateNoteInScientificHistory: (index: number, note: string) => void;
+  deleteNoteFromScientificHistory: (index: number) => void;
   t: (key: string) => string;
 }
 
@@ -423,8 +459,8 @@ interface SettingsProviderProps {
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
-  const [history, setHistory] = useState<{ calculation: string; result: string; timestamp: Date }[]>([]);
-  const [scientificHistory, setScientificHistory] = useState<{ calculation: string; result: string; timestamp: Date }[]>([]);
+  const [history, setHistory] = useState<{ calculation: string; result: string; timestamp: Date; note?: string }[]>([]);
+  const [scientificHistory, setScientificHistory] = useState<{ calculation: string; result: string; timestamp: Date; note?: string }[]>([]);
 
   // Ayarları yükle
   useEffect(() => {
@@ -518,6 +554,56 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     setScientificHistory([]);
   };
 
+  // Not yönetimi fonksiyonları
+  const addNoteToHistory = (index: number, note: string) => {
+    setHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note } : item
+      )
+    );
+  };
+
+  const updateNoteInHistory = (index: number, note: string) => {
+    setHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note } : item
+      )
+    );
+  };
+
+  const deleteNoteFromHistory = (index: number) => {
+    setHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note: undefined } : item
+      )
+    );
+  };
+
+  // Bilimsel hesap makinesi not yönetimi fonksiyonları
+  const addNoteToScientificHistory = (index: number, note: string) => {
+    setScientificHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note } : item
+      )
+    );
+  };
+
+  const updateNoteInScientificHistory = (index: number, note: string) => {
+    setScientificHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note } : item
+      )
+    );
+  };
+
+  const deleteNoteFromScientificHistory = (index: number) => {
+    setScientificHistory(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, note: undefined } : item
+      )
+    );
+  };
+
   const t = (key: string): string => {
     const currentTranslations = translations[settings.language];
     return currentTranslations[key as keyof typeof currentTranslations] || key;
@@ -534,6 +620,12 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     addToScientificHistory,
     getScientificHistory,
     clearScientificHistory,
+    addNoteToHistory,
+    updateNoteInHistory,
+    deleteNoteFromHistory,
+    addNoteToScientificHistory,
+    updateNoteInScientificHistory,
+    deleteNoteFromScientificHistory,
     t,
   };
 

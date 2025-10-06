@@ -1,3 +1,4 @@
+import NoteModal from '@/components/NoteModal';
 import { useSettings } from '@/contexts/SettingsContext';
 import { FontAwesome } from '@expo/vector-icons';
 import { setStringAsync } from 'expo-clipboard';
@@ -97,8 +98,11 @@ export default function ScientificScreen() {
   const [result, setResult] = useState('');
   const [instantResult, setInstantResult] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [currentCalculation, setCurrentCalculation] = useState('');
+  const [currentResult, setCurrentResult] = useState('');
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, t } = useSettings();
+  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, addNoteToScientificHistory, updateNoteInScientificHistory, deleteNoteFromScientificHistory, t } = useSettings();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -263,6 +267,44 @@ export default function ScientificScreen() {
       } catch {
         Alert.alert(t('error'), t('copyFailed'), [{ text: t('ok') }]);
       }
+    }
+  };
+
+  const handleAddNote = () => {
+    if (result && result !== t('calculationError')) {
+      setCurrentCalculation(displayInput);
+      setCurrentResult(result);
+      setShowNoteModal(true);
+    }
+  };
+
+  const handleSaveNote = (note: string) => {
+    const historyItems = getScientificHistory();
+    const existingIndex = historyItems.findIndex(item => 
+      item.calculation === currentCalculation && item.result === currentResult
+    );
+    
+    if (existingIndex !== -1) {
+      // Mevcut notu güncelle
+      updateNoteInScientificHistory(existingIndex, note);
+      Alert.alert(t('success'), t('noteUpdated'), [{ text: t('ok') }]);
+    } else {
+      // Yeni not ekle (en son hesaplama için)
+      if (historyItems.length > 0) {
+        addNoteToScientificHistory(0, note);
+        Alert.alert(t('success'), t('noteAdded'), [{ text: t('ok') }]);
+      }
+    }
+  };
+
+  const handleDeleteNote = () => {
+    const historyItems = getScientificHistory();
+    const index = historyItems.findIndex(item => 
+      item.calculation === currentCalculation && item.result === currentResult
+    );
+    if (index !== -1) {
+      deleteNoteFromScientificHistory(index);
+      Alert.alert(t('success'), t('noteDeleted'), [{ text: t('ok') }]);
     }
   };
 
@@ -478,6 +520,35 @@ export default function ScientificScreen() {
       fontWeight: 'bold',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
+    historyItemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      width: '100%',
+    },
+    historyCalculationContainer: {
+      flex: 1,
+    },
+    noteIndicator: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: isDarkMode ? '#333333' : '#e8e8e8',
+      marginLeft: 8,
+    },
+    noteContainer: {
+      backgroundColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+      borderRadius: 8,
+      padding: 10,
+      marginTop: 8,
+      borderLeftWidth: 3,
+      borderLeftColor: isDarkMode ? '#ffb300' : '#007AFF',
+    },
+    noteText: {
+      color: isDarkMode ? '#cccccc' : '#666666',
+      fontSize: 14,
+      fontStyle: 'italic',
+      lineHeight: 20,
+    },
   });
 
   const styles = getStyles();
@@ -529,8 +600,29 @@ export default function ScientificScreen() {
                     triggerHaptic();
                   }}
                 >
-                  <Text style={styles.historyCalculation}>{item.calculation}</Text>
-                  <Text style={styles.historyResult}>= {item.result}</Text>
+                  <View style={styles.historyItemHeader}>
+                    <View style={styles.historyCalculationContainer}>
+                      <Text style={styles.historyCalculation}>{item.calculation}</Text>
+                      <Text style={styles.historyResult}>= {item.result}</Text>
+                    </View>
+                    {item.note && (
+                      <TouchableOpacity
+                        style={styles.noteIndicator}
+                        onPress={() => {
+                          setCurrentCalculation(item.calculation);
+                          setCurrentResult(item.result);
+                          setShowNoteModal(true);
+                        }}
+                      >
+                        <FontAwesome name="sticky-note" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {item.note && (
+                    <View style={styles.noteContainer}>
+                      <Text style={styles.noteText}>{item.note}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))
             )}
@@ -566,6 +658,9 @@ export default function ScientificScreen() {
             <View style={styles.resultButtons}>
               <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
                 <FontAwesome name="copy" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionButton} onPress={handleAddNote}>
+                <FontAwesome name="sticky-note" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
                 <FontAwesome name="plus" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
@@ -605,6 +700,29 @@ export default function ScientificScreen() {
           </View>
         ))}
       </ScrollView>
+      
+      <NoteModal
+        visible={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        onSave={handleSaveNote}
+        onDelete={handleDeleteNote}
+        initialNote={(() => {
+          const historyItems = getScientificHistory();
+          const existingItem = historyItems.find(item => 
+            item.calculation === currentCalculation && item.result === currentResult
+          );
+          return existingItem?.note || '';
+        })()}
+        calculation={currentCalculation}
+        result={currentResult}
+        isEditing={(() => {
+          const historyItems = getScientificHistory();
+          const existingItem = historyItems.find(item => 
+            item.calculation === currentCalculation && item.result === currentResult
+          );
+          return !!existingItem?.note;
+        })()}
+      />
     </SafeAreaView>
   );
 }
