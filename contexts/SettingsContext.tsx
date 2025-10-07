@@ -528,9 +528,11 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   const [history, setHistory] = useState<{ calculation: string; result: string; timestamp: Date; note?: string }[]>([]);
   const [scientificHistory, setScientificHistory] = useState<{ calculation: string; result: string; timestamp: Date; note?: string }[]>([]);
 
-  // Ayarları yükle
+  // Ayarları ve geçmişi yükle
   useEffect(() => {
     loadSettings();
+    loadHistory();
+    loadScientificHistory();
   }, []);
 
   const loadSettings = async () => {
@@ -550,6 +552,40 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
       }
     } catch (error) {
       console.error('Ayarlar yüklenirken hata:', error);
+    }
+  };
+
+  const loadHistory = async () => {
+    try {
+      const storedHistory = await AsyncStorage.getItem('calculator_history');
+      if (storedHistory) {
+        const parsedHistory = JSON.parse(storedHistory);
+        // timestamp'leri Date objesine çevir
+        const historyWithDates = parsedHistory.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp)
+        }));
+        setHistory(historyWithDates);
+      }
+    } catch (error) {
+      console.error('Geçmiş yüklenirken hata:', error);
+    }
+  };
+
+  const loadScientificHistory = async () => {
+    try {
+      const storedScientificHistory = await AsyncStorage.getItem('calculator_scientific_history');
+      if (storedScientificHistory) {
+        const parsedScientificHistory = JSON.parse(storedScientificHistory);
+        // timestamp'leri Date objesine çevir
+        const historyWithDates = parsedScientificHistory.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp)
+        }));
+        setScientificHistory(historyWithDates);
+      }
+    } catch (error) {
+      console.error('Bilimsel geçmiş yüklenirken hata:', error);
     }
   };
 
@@ -593,81 +629,135 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
   };
 
   // Normal hesap makinesi geçmişi
-  const addToHistory = (calculation: string, result: string) => {
+  const addToHistory = async (calculation: string, result: string) => {
     const newEntry = { calculation, result, timestamp: new Date() };
-    setHistory(prev => [newEntry, ...prev.slice(0, 9)]); // Son 10 işlemi sakla
+    const updatedHistory = [newEntry, ...history.slice(0, 9)]; // Son 10 işlemi sakla
+    setHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Geçmiş kaydedilirken hata:', error);
+    }
   };
 
   const getHistory = () => {
     return history;
   };
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
     setHistory([]);
+    try {
+      await AsyncStorage.removeItem('calculator_history');
+    } catch (error) {
+      console.error('Geçmiş temizlenirken hata:', error);
+    }
   };
 
   // Bilimsel hesap makinesi geçmişi
-  const addToScientificHistory = (calculation: string, result: string) => {
+  const addToScientificHistory = async (calculation: string, result: string) => {
     const newEntry = { calculation, result, timestamp: new Date() };
-    setScientificHistory(prev => [newEntry, ...prev.slice(0, 9)]); // Son 10 işlemi sakla
+    const updatedHistory = [newEntry, ...scientificHistory.slice(0, 9)]; // Son 10 işlemi sakla
+    setScientificHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_scientific_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Bilimsel geçmiş kaydedilirken hata:', error);
+    }
   };
 
   const getScientificHistory = () => {
     return scientificHistory;
   };
 
-  const clearScientificHistory = () => {
+  const clearScientificHistory = async () => {
     setScientificHistory([]);
+    try {
+      await AsyncStorage.removeItem('calculator_scientific_history');
+    } catch (error) {
+      console.error('Bilimsel geçmiş temizlenirken hata:', error);
+    }
   };
 
   // Not yönetimi fonksiyonları
-  const addNoteToHistory = (index: number, note: string) => {
-    setHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note } : item
-      )
+  const addNoteToHistory = async (index: number, note: string) => {
+    const updatedHistory = history.map((item, i) => 
+      i === index ? { ...item, note } : item
     );
+    setHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Not eklenirken hata:', error);
+    }
   };
 
-  const updateNoteInHistory = (index: number, note: string) => {
-    setHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note } : item
-      )
+  const updateNoteInHistory = async (index: number, note: string) => {
+    const updatedHistory = history.map((item, i) => 
+      i === index ? { ...item, note } : item
     );
+    setHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Not güncellenirken hata:', error);
+    }
   };
 
-  const deleteNoteFromHistory = (index: number) => {
-    setHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note: undefined } : item
-      )
+  const deleteNoteFromHistory = async (index: number) => {
+    const updatedHistory = history.map((item, i) => 
+      i === index ? { ...item, note: undefined } : item
     );
+    setHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Not silinirken hata:', error);
+    }
   };
 
   // Bilimsel hesap makinesi not yönetimi fonksiyonları
-  const addNoteToScientificHistory = (index: number, note: string) => {
-    setScientificHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note } : item
-      )
+  const addNoteToScientificHistory = async (index: number, note: string) => {
+    const updatedHistory = scientificHistory.map((item, i) => 
+      i === index ? { ...item, note } : item
     );
+    setScientificHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_scientific_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Bilimsel not eklenirken hata:', error);
+    }
   };
 
-  const updateNoteInScientificHistory = (index: number, note: string) => {
-    setScientificHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note } : item
-      )
+  const updateNoteInScientificHistory = async (index: number, note: string) => {
+    const updatedHistory = scientificHistory.map((item, i) => 
+      i === index ? { ...item, note } : item
     );
+    setScientificHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_scientific_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Bilimsel not güncellenirken hata:', error);
+    }
   };
 
-  const deleteNoteFromScientificHistory = (index: number) => {
-    setScientificHistory(prev => 
-      prev.map((item, i) => 
-        i === index ? { ...item, note: undefined } : item
-      )
+  const deleteNoteFromScientificHistory = async (index: number) => {
+    const updatedHistory = scientificHistory.map((item, i) => 
+      i === index ? { ...item, note: undefined } : item
     );
+    setScientificHistory(updatedHistory);
+    
+    try {
+      await AsyncStorage.setItem('calculator_scientific_history', JSON.stringify(updatedHistory));
+    } catch (error) {
+      console.error('Bilimsel not silinirken hata:', error);
+    }
   };
 
   const t = (key: string): string => {

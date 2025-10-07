@@ -14,7 +14,7 @@ export default function SettingsScreen() {
     highContrast,
     updateSettings,
     triggerHaptic,
-    clearHistory: clearCalculatorHistory,
+    clearHistory,
     clearScientificHistory,
     t
   } = useSettings();
@@ -106,7 +106,7 @@ export default function SettingsScreen() {
     );
   };
 
-  const clearHistory = () => {
+  const clearHistoryConfirm = () => {
     Alert.alert(
       t('clearHistoryTitle'),
       t('clearHistoryDesc'),
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
             try {
               triggerHaptic();
               // Gerçek geçmiş temizleme fonksiyonunu kullan
-              clearCalculatorHistory();
+              await clearHistory();
               Alert.alert(t('success'), t('historyCleared'));
             } catch {
               Alert.alert(t('error'), 'An error occurred while clearing history.');
@@ -142,7 +142,7 @@ export default function SettingsScreen() {
           onPress: async () => {
             try {
               triggerHaptic();
-              clearScientificHistory();
+              await clearScientificHistory();
               Alert.alert(t('success'), t('scientificHistoryCleared'));
             } catch {
               Alert.alert(t('error'), 'An error occurred while clearing scientific history.');
@@ -500,7 +500,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('dataManagement')}</Text>
           
-          <TouchableOpacity style={styles.clearButton} onPress={clearHistory}>
+          <TouchableOpacity style={styles.clearButton} onPress={clearHistoryConfirm}>
             <Text style={styles.buttonText}>{t('clearHistory')}</Text>
           </TouchableOpacity>
 
@@ -537,7 +537,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </Animated.View>
           
-          <Text style={styles.versionText}>SmartCalc v1.0.8</Text>
+          <Text style={styles.versionText}>SmartCalc v1.0.9</Text>
           <Text style={styles.developerText}>{t('developer')}</Text>
         </View>
       </ScrollView>
