@@ -235,6 +235,18 @@ const translations = {
     rateAppDesc: 'Play Store\'da beğenin ve yıldız verin',
     moreApps: 'Diğer Uygulamalarım',
     moreAppsDesc: 'Geliştirici sayfasına göz atın',
+    
+    // Temalar
+    theme: 'Tema',
+    themeDesc: 'Renk teması seçin',
+    themeNone: 'Hiçbiri',
+    themeDefault: 'Varsayılan',
+    themeOcean: 'Okyanus',
+    themeForest: 'Orman',
+    themeSunset: 'Gün Batımı',
+    themePurple: 'Mor',
+    themeRose: 'Gül',
+    themeMidnight: 'Gece Yarısı',
   },
   en: {
     // Calculator
@@ -468,6 +480,18 @@ const translations = {
     rateAppDesc: 'Rate and review us on Play Store',
     moreApps: 'More Apps',
     moreAppsDesc: 'Check out developer page',
+    
+    // Themes
+    theme: 'Theme',
+    themeDesc: 'Choose color theme',
+    themeNone: 'None',
+    themeDefault: 'Default',
+    themeOcean: 'Ocean',
+    themeForest: 'Forest',
+    themeSunset: 'Sunset',
+    themePurple: 'Purple',
+    themeRose: 'Rose',
+    themeMidnight: 'Midnight',
   }
 };
 
@@ -479,6 +503,7 @@ interface SettingsContextType {
   defaultAngleUnit: 'degree' | 'radian';
   language: 'tr' | 'en';
   highContrast: boolean;
+  theme: 'none' | 'default' | 'ocean' | 'forest' | 'sunset' | 'purple' | 'rose' | 'midnight';
   updateSettings: (newSettings: Partial<SettingsState>) => void;
   triggerHaptic: () => void;
   formatNumber: (num: number) => string;
@@ -495,6 +520,17 @@ interface SettingsContextType {
   updateNoteInScientificHistory: (index: number, note: string) => void;
   deleteNoteFromScientificHistory: (index: number) => void;
   t: (key: string) => string;
+  getThemeColors: () => ThemeColors;
+}
+
+interface ThemeColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
 }
 
 interface SettingsState {
@@ -505,6 +541,7 @@ interface SettingsState {
   defaultAngleUnit: 'degree' | 'radian';
   language: 'tr' | 'en';
   highContrast: boolean;
+  theme: 'none' | 'default' | 'ocean' | 'forest' | 'sunset' | 'purple' | 'rose' | 'midnight';
 }
 
 const defaultSettings: SettingsState = {
@@ -514,7 +551,8 @@ const defaultSettings: SettingsState = {
   soundEnabled: false,
   defaultAngleUnit: 'degree',
   language: 'tr',
-  highContrast: false
+  highContrast: false,
+  theme: 'default'
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -548,6 +586,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           defaultAngleUnit: parsedSettings.defaultAngleUnit ?? defaultSettings.defaultAngleUnit,
           language: parsedSettings.language ?? defaultSettings.language,
           highContrast: parsedSettings.highContrast ?? defaultSettings.highContrast,
+          theme: parsedSettings.theme ?? defaultSettings.theme,
         });
       }
     } catch (error) {
@@ -765,6 +804,181 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     return currentTranslations[key as keyof typeof currentTranslations] || key;
   };
 
+  const getThemeColors = (): ThemeColors => {
+    const { theme, isDarkMode, highContrast } = settings;
+    
+    // Eğer "Hiçbiri" seçiliyse, normal karanlık/açık tema renklerini döndür
+    if (theme === 'none') {
+      if (isDarkMode) {
+        return {
+          primary: '#ff9500',                    // Turuncu eşittir butonu
+          secondary: highContrast ? '#a0a0a0' : '#757575',  // Orta gri fonksiyon butonları
+          accent: highContrast ? '#d0d0d0' : '#c0c0c0',     // Açık gri AC/parantez butonları
+          background: highContrast ? '#000000' : '#1c1c1c', // Siyah arkaplan
+          surface: highContrast ? '#2a2a2a' : '#404040',    // Koyu gri sayı butonları
+          text: '#ffffff',                       // Beyaz metin
+          textSecondary: highContrast ? '#e0e0e0' : '#999999', // Gri ikincil metin
+        };
+      } else {
+        return {
+          primary: '#ff9500',                    // Turuncu eşittir butonu
+          secondary: highContrast ? '#5c5c5c' : '#757575',  // Orta gri fonksiyon butonları
+          accent: highContrast ? '#a8a8a8' : '#c0c0c0',     // Açık gri AC/parantez butonları
+          background: highContrast ? '#ffffff' : '#f0f0f0', // Beyaz/açık gri arkaplan
+          surface: highContrast ? '#e8e8e8' : '#ffffff',    // Beyaz sayı butonları
+          text: '#000000',                       // Siyah metin
+          textSecondary: highContrast ? '#333333' : '#666666', // Gri ikincil metin
+        };
+      }
+    }
+    
+    // Tema renk paletleri
+    const themes = {
+      default: {
+        light: {
+          primary: '#ff9500',
+          secondary: '#007AFF',
+          accent: '#ffb300',
+          background: '#f5f5f5',
+          surface: '#ffffff',
+          text: '#000000',
+          textSecondary: '#666666',
+        },
+        dark: {
+          primary: '#ff9500',
+          secondary: '#0A84FF',
+          accent: '#ffb300',
+          background: '#181818',
+          surface: '#232323',
+          text: '#ffffff',
+          textSecondary: '#bbbbbb',
+        }
+      },
+      ocean: {
+        light: {
+          primary: '#0077BE',
+          secondary: '#00A8E8',
+          accent: '#00C9FF',
+          background: '#E8F4F8',
+          surface: '#ffffff',
+          text: '#003459',
+          textSecondary: '#4A6FA5',
+        },
+        dark: {
+          primary: '#00A8E8',
+          secondary: '#0077BE',
+          accent: '#00C9FF',
+          background: '#001D3D',
+          surface: '#003459',
+          text: '#E8F4F8',
+          textSecondary: '#80B5D8',
+        }
+      },
+      forest: {
+        light: {
+          primary: '#2D6A4F',
+          secondary: '#40916C',
+          accent: '#52B788',
+          background: '#E8F5E9',
+          surface: '#ffffff',
+          text: '#1B4332',
+          textSecondary: '#52796F',
+        },
+        dark: {
+          primary: '#52B788',
+          secondary: '#40916C',
+          accent: '#74C69D',
+          background: '#081C15',
+          surface: '#1B4332',
+          text: '#D8F3DC',
+          textSecondary: '#95D5B2',
+        }
+      },
+      sunset: {
+        light: {
+          primary: '#FF6B35',
+          secondary: '#F7931E',
+          accent: '#FFB84D',
+          background: '#FFF5E6',
+          surface: '#ffffff',
+          text: '#5C2E00',
+          textSecondary: '#8B4513',
+        },
+        dark: {
+          primary: '#FF6B35',
+          secondary: '#F7931E',
+          accent: '#FFB84D',
+          background: '#1A0F00',
+          surface: '#2E1A00',
+          text: '#FFE5CC',
+          textSecondary: '#FFB84D',
+        }
+      },
+      purple: {
+        light: {
+          primary: '#7209B7',
+          secondary: '#B5179E',
+          accent: '#F72585',
+          background: '#F0E6FF',
+          surface: '#ffffff',
+          text: '#3C096C',
+          textSecondary: '#6A4C93',
+        },
+        dark: {
+          primary: '#B5179E',
+          secondary: '#7209B7',
+          accent: '#F72585',
+          background: '#10002B',
+          surface: '#240046',
+          text: '#E0AAFF',
+          textSecondary: '#C77DFF',
+        }
+      },
+      rose: {
+        light: {
+          primary: '#E63946',
+          secondary: '#F4A7BB',
+          accent: '#FF8FA3',
+          background: '#FFF0F3',
+          surface: '#ffffff',
+          text: '#590D22',
+          textSecondary: '#A4133C',
+        },
+        dark: {
+          primary: '#FF8FA3',
+          secondary: '#E63946',
+          accent: '#F4A7BB',
+          background: '#1A0005',
+          surface: '#2E0011',
+          text: '#FFE5EC',
+          textSecondary: '#FFCCD5',
+        }
+      },
+      midnight: {
+        light: {
+          primary: '#2C3E50',
+          secondary: '#34495E',
+          accent: '#5DADE2',
+          background: '#ECF0F1',
+          surface: '#ffffff',
+          text: '#1C2833',
+          textSecondary: '#566573',
+        },
+        dark: {
+          primary: '#5DADE2',
+          secondary: '#85C1E9',
+          accent: '#AED6F1',
+          background: '#0B0C10',
+          surface: '#1F2833',
+          text: '#C5C6C7',
+          textSecondary: '#8B9296',
+        }
+      }
+    };
+    
+    return themes[theme][isDarkMode ? 'dark' : 'light'];
+  };
+
   const contextValue: SettingsContextType = {
     ...settings,
     updateSettings,
@@ -783,6 +997,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     updateNoteInScientificHistory,
     deleteNoteFromScientificHistory,
     t,
+    getThemeColors,
   };
 
   return (

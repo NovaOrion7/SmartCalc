@@ -29,42 +29,37 @@ const buttons = [
 
 const FUNCTION_KEYS = ['C', '⌫', '=', '+/-', 'mod', 'n!', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', '√', 'x^2', 'x^y', '10^x', '|x|', '1/x'];
 
-function Header({ title, isDarkMode, onHistoryPress, historyCount, highContrast }: { 
+function Header({ title, isDarkMode, onHistoryPress, historyCount }: { 
   title: string; 
   isDarkMode: boolean; 
   onHistoryPress: () => void;
   historyCount: number;
-  highContrast: boolean;
 }) {
+  const { getThemeColors } = useSettings();
+  const themeColors = getThemeColors();
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
       paddingHorizontal: 18,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode 
-        ? (highContrast ? '#666666' : '#232323') 
-        : (highContrast ? '#cccccc' : '#e0e0e0'),
+      borderBottomWidth: 2,
+      borderBottomColor: themeColors.accent,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.08 : 0.05,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 3,
     },
     leftSection: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     headerTitle: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
@@ -72,17 +67,15 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount, highContrast 
     historyButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#666666' : '#333') 
-        : (highContrast ? '#cccccc' : '#e0e0e0'),
+      backgroundColor: themeColors.surface,
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 15,
+      borderWidth: 1,
+      borderColor: themeColors.secondary,
     },
     historyCount: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 12,
       marginLeft: 5,
       fontWeight: 'bold',
@@ -92,11 +85,11 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount, highContrast 
   return (
     <View style={headerStyles.headerContainer}>
       <View style={headerStyles.leftSection}>
-        <FontAwesome name="superscript" size={24} color="#ffb300" style={{ marginRight: 10 }} />
+        <FontAwesome name="superscript" size={24} color={themeColors.primary} style={{ marginRight: 10 }} />
         <Text style={headerStyles.headerTitle}>{title}</Text>
       </View>
       <TouchableOpacity style={headerStyles.historyButton} onPress={onHistoryPress}>
-        <FontAwesome name="history" size={16} color={isDarkMode ? '#ffb300' : '#666'} />
+        <FontAwesome name="history" size={16} color={themeColors.accent} />
         <Text style={headerStyles.historyCount}>{historyCount}</Text>
       </TouchableOpacity>
     </View>
@@ -113,7 +106,8 @@ export default function ScientificScreen() {
   const [currentCalculation, setCurrentCalculation] = useState('');
   const [currentResult, setCurrentResult] = useState('');
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, addNoteToScientificHistory, updateNoteInScientificHistory, deleteNoteFromScientificHistory, t } = useSettings();
+  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToScientificHistory, getScientificHistory, clearScientificHistory, addNoteToScientificHistory, updateNoteInScientificHistory, deleteNoteFromScientificHistory, t, getThemeColors } = useSettings();
+  const themeColors = getThemeColors();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -334,9 +328,7 @@ export default function ScientificScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
       justifyContent: 'flex-start',
       padding: 20,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
@@ -347,9 +339,7 @@ export default function ScientificScreen() {
       justifyContent: 'flex-end',
     },
     inputText: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#bbb') 
-        : (highContrast ? '#000000' : '#333'),
+      color: themeColors.text,
       fontSize: 22,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -358,20 +348,18 @@ export default function ScientificScreen() {
       flexShrink: 1,
     },
     resultBox: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#333333' : '#232323') 
-        : (highContrast ? '#f0f0f0' : '#e0e0e0'),
+      backgroundColor: themeColors.surface,
       borderRadius: 10,
       paddingVertical: 6,
       paddingHorizontal: 10,
       marginTop: 6,
       alignSelf: 'flex-end',
       minWidth: 90,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
     },
     instantResultBox: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#444444' : '#1a1a1a') 
-        : (highContrast ? '#e8e8e8' : '#f0f0f0'),
+      backgroundColor: themeColors.surface,
       borderRadius: 8,
       paddingTop: 14,
       paddingBottom: 16,
@@ -382,11 +370,11 @@ export default function ScientificScreen() {
       minHeight: 48,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: themeColors.secondary,
     },
     instantResultText: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#888') 
-        : (highContrast ? '#000000' : '#666'),
+      color: themeColors.textSecondary,
       fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
@@ -404,13 +392,15 @@ export default function ScientificScreen() {
       marginTop: 6,
     },
     actionButton: {
-      backgroundColor: isDarkMode ? '#444' : '#ddd',
+      backgroundColor: themeColors.surface,
       borderRadius: 6,
       padding: 8,
       marginLeft: 8,
       minWidth: 36,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: themeColors.accent,
     },
     resultButtons: {
       flexDirection: 'row',
@@ -418,7 +408,7 @@ export default function ScientificScreen() {
       marginLeft: 8,
     },
     resultText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -426,7 +416,7 @@ export default function ScientificScreen() {
       flexShrink: 1,
     },
     copyHint: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 12,
       textAlign: 'right',
       marginTop: 4,
@@ -443,19 +433,21 @@ export default function ScientificScreen() {
       justifyContent: 'center',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.22 : 0.1,
+      shadowOpacity: 0.15,
       shadowRadius: 4,
       elevation: 3,
-      backgroundColor: isDarkMode ? '#232323' : '#fff',
+      backgroundColor: themeColors.surface,
       paddingVertical: 12,
+      borderWidth: 1,
+      borderColor: themeColors.textSecondary + '40',
     },
     numberButton: {
-      backgroundColor: isDarkMode ? '#232323' : '#fff',
+      backgroundColor: themeColors.surface,
     },
     functionButton: {
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
+      backgroundColor: themeColors.secondary,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+      borderColor: themeColors.accent,
     },
     buttonText: {
       fontSize: 14,
@@ -463,35 +455,35 @@ export default function ScientificScreen() {
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
     numberButtonText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
     },
     functionButtonText: {
-      color: isDarkMode ? '#ffb300' : '#fff',
+      color: '#ffffff',
       fontWeight: '600',
     },
     angleToggle: {
       alignSelf: 'flex-end',
-      backgroundColor: isDarkMode ? '#2d2d2d' : '#007AFF',
+      backgroundColor: themeColors.primary,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 8,
-      borderWidth: 1,
-      borderColor: isDarkMode ? '#3a3a3a' : '#0056cc',
+      borderWidth: 2,
+      borderColor: themeColors.accent,
       marginBottom: 10,
     },
     angleText: {
-      color: isDarkMode ? '#ffb300' : '#fff',
+      color: '#ffffff',
       fontSize: 12,
       fontWeight: '600',
     },
     historyPanel: {
-      backgroundColor: isDarkMode ? '#1a1a1a' : '#f8f8f8',
+      backgroundColor: themeColors.surface,
       marginHorizontal: 20,
       marginBottom: 10,
       borderRadius: 12,
       maxHeight: 250,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#333' : '#e0e0e0',
+      borderColor: themeColors.secondary,
     },
     historyHeader: {
       flexDirection: 'row',
@@ -500,15 +492,15 @@ export default function ScientificScreen() {
       paddingHorizontal: 15,
       paddingVertical: 10,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#e0e0e0',
+      borderBottomColor: themeColors.secondary,
     },
     historyTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
     },
     clearHistoryButton: {
-      backgroundColor: isDarkMode ? '#ff4444' : '#ff6b6b',
+      backgroundColor: '#FF3B30',
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 6,
@@ -522,7 +514,7 @@ export default function ScientificScreen() {
       maxHeight: 180,
     },
     emptyHistoryText: {
-      color: isDarkMode ? '#888' : '#666',
+      color: themeColors.textSecondary,
       textAlign: 'center',
       fontStyle: 'italic',
       padding: 20,
@@ -531,15 +523,15 @@ export default function ScientificScreen() {
       paddingHorizontal: 15,
       paddingVertical: 8,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+      borderBottomColor: themeColors.secondary + '40',
     },
     historyCalculation: {
-      color: isDarkMode ? '#ccc' : '#555',
+      color: themeColors.textSecondary,
       fontSize: 14,
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     },
     historyResult: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -556,19 +548,21 @@ export default function ScientificScreen() {
     noteIndicator: {
       padding: 8,
       borderRadius: 8,
-      backgroundColor: isDarkMode ? '#333333' : '#e8e8e8',
+      backgroundColor: themeColors.surface,
       marginLeft: 8,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
     },
     noteContainer: {
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       borderRadius: 8,
       padding: 10,
       marginTop: 8,
       borderLeftWidth: 3,
-      borderLeftColor: isDarkMode ? '#ffb300' : '#007AFF',
+      borderLeftColor: themeColors.primary,
     },
     noteText: {
-      color: isDarkMode ? '#cccccc' : '#666666',
+      color: themeColors.textSecondary,
       fontSize: 14,
       fontStyle: 'italic',
       lineHeight: 20,
@@ -580,15 +574,14 @@ export default function ScientificScreen() {
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
       <View style={{ 
-        backgroundColor: isDarkMode ? '#181818' : '#f5f5f5', 
+        backgroundColor: themeColors.background, 
         borderBottomWidth: 1, 
-        borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0', 
+        borderBottomColor: themeColors.accent, 
         paddingBottom: 2 
       }}>
         <Header 
           title={t('scientific')} 
           isDarkMode={isDarkMode} 
-          highContrast={highContrast}
           onHistoryPress={() => setShowHistory(!showHistory)}
           historyCount={getScientificHistory().length}
         />
@@ -639,7 +632,7 @@ export default function ScientificScreen() {
                           setShowNoteModal(true);
                         }}
                       >
-                        <FontAwesome name="sticky-note" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                        <FontAwesome name="sticky-note" size={14} color={themeColors.primary} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -682,13 +675,13 @@ export default function ScientificScreen() {
             </View>
             <View style={styles.resultButtons}>
               <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
-                <FontAwesome name="copy" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                <FontAwesome name="copy" size={14} color={themeColors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={handleAddNote}>
-                <FontAwesome name="sticky-note" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                <FontAwesome name="sticky-note" size={14} color={themeColors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
-                <FontAwesome name="plus" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                <FontAwesome name="plus" size={14} color={themeColors.primary} />
               </TouchableOpacity>
             </View>
           </View>

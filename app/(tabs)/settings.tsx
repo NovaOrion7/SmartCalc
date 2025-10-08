@@ -12,12 +12,16 @@ export default function SettingsScreen() {
     defaultAngleUnit,
     language,
     highContrast,
+    theme,
     updateSettings,
     triggerHaptic,
     clearHistory,
     clearScientificHistory,
-    t
+    t,
+    getThemeColors
   } = useSettings();
+  
+  const themeColors = getThemeColors();
 
   // Animation refs
   const rateButtonScale = useRef(new Animated.Value(1)).current;
@@ -80,6 +84,11 @@ export default function SettingsScreen() {
   const handleLanguageChange = (lang: string) => {
     triggerHaptic();
     updateSettings({ language: lang as 'tr' | 'en' });
+  };
+
+  const handleThemeChange = (selectedTheme: string) => {
+    triggerHaptic();
+    updateSettings({ theme: selectedTheme as 'none' | 'default' | 'ocean' | 'forest' | 'sunset' | 'purple' | 'rose' | 'midnight' });
   };
 
   const resetSettings = () => {
@@ -200,9 +209,7 @@ export default function SettingsScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
     },
     scrollView: {
       flex: 1,
@@ -211,17 +218,13 @@ export default function SettingsScreen() {
     title: {
       fontSize: 28,
       fontWeight: 'bold',
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       marginTop: 20,
       marginBottom: 30,
       textAlign: 'center',
     },
     section: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#333333' : '#1a1a1a') 
-        : (highContrast ? '#f0f0f0' : '#fff'),
+      backgroundColor: themeColors.surface,
       borderRadius: 12,
       padding: 20,
       marginBottom: 20,
@@ -230,11 +233,13 @@ export default function SettingsScreen() {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
+      borderWidth: 1,
+      borderColor: themeColors.secondary + '40',
     },
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       marginBottom: 15,
     },
     settingItem: {
@@ -243,19 +248,19 @@ export default function SettingsScreen() {
       alignItems: 'center',
       paddingVertical: 15,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#e0e0e0',
+      borderBottomColor: themeColors.secondary + '40',
     },
     lastSettingItem: {
       borderBottomWidth: 0,
     },
     settingLabel: {
       fontSize: 16,
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       flex: 1,
     },
     settingDescription: {
       fontSize: 14,
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       marginTop: 2,
     },
     angleButtonContainer: {
@@ -266,15 +271,16 @@ export default function SettingsScreen() {
       paddingHorizontal: 15,
       paddingVertical: 8,
       borderRadius: 20,
-      borderWidth: 1,
-      borderColor: isDarkMode ? '#666' : '#ccc',
+      borderWidth: 2,
+      borderColor: themeColors.secondary,
+      backgroundColor: themeColors.surface,
     },
     angleButtonActive: {
-      backgroundColor: '#007AFF',
-      borderColor: '#007AFF',
+      backgroundColor: themeColors.primary,
+      borderColor: themeColors.primary,
     },
     angleButtonText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 14,
     },
     angleButtonTextActive: {
@@ -288,19 +294,70 @@ export default function SettingsScreen() {
       paddingHorizontal: 15,
       paddingVertical: 8,
       borderRadius: 20,
-      borderWidth: 1,
-      borderColor: isDarkMode ? '#666' : '#ccc',
+      borderWidth: 2,
+      borderColor: themeColors.secondary,
+      backgroundColor: themeColors.surface,
     },
     languageButtonActive: {
-      backgroundColor: '#007AFF',
-      borderColor: '#007AFF',
+      backgroundColor: themeColors.primary,
+      borderColor: themeColors.primary,
     },
     languageButtonText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 14,
     },
     languageButtonTextActive: {
       color: '#fff',
+    },
+    themeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginTop: 15,
+    },
+    themeCard: {
+      width: '30%',
+      aspectRatio: 1,
+      borderRadius: 12,
+      padding: 10,
+      backgroundColor: themeColors.surface,
+      borderWidth: 2,
+      borderColor: themeColors.secondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    themeCardActive: {
+      borderColor: themeColors.primary,
+      backgroundColor: themeColors.surface,
+      borderWidth: 3,
+    },
+    themeColors: {
+      flexDirection: 'row',
+      gap: 6,
+      marginBottom: 8,
+    },
+    themeColorBox: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+    },
+    themeCardText: {
+      fontSize: 12,
+      color: themeColors.text,
+      textAlign: 'center',
+      fontWeight: '500',
+    },
+    themeCardTextActive: {
+      color: themeColors.primary,
+      fontWeight: '600',
+    },
+    themeCheckmark: {
+      position: 'absolute',
+      top: 5,
+      right: 5,
+      fontSize: 18,
+      color: themeColors.primary,
+      fontWeight: 'bold',
     },
     resetButton: {
       backgroundColor: '#FF3B30',
@@ -337,13 +394,13 @@ export default function SettingsScreen() {
     },
     versionText: {
       textAlign: 'center',
-      color: isDarkMode ? '#666' : '#999',
+      color: themeColors.textSecondary,
       fontSize: 14,
       marginTop: 20,
     },
     developerText: {
       textAlign: 'center',
-      color: isDarkMode ? '#888' : '#777',
+      color: themeColors.textSecondary,
       fontSize: 12,
       marginTop: 5,
       fontStyle: 'italic',
@@ -433,6 +490,48 @@ export default function SettingsScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+
+        {/* Tema Ayarları */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('theme')}</Text>
+          <Text style={styles.settingDescription}>{t('themeDesc')}</Text>
+          
+          <View style={styles.themeGrid}>
+            {[
+              { id: 'none', name: t('themeNone'), colors: ['#666666', '#999999'] },
+              { id: 'default', name: t('themeDefault'), colors: ['#ff9500', '#007AFF'] },
+              { id: 'ocean', name: t('themeOcean'), colors: ['#00A8E8', '#00C9FF'] },
+              { id: 'forest', name: t('themeForest'), colors: ['#52B788', '#40916C'] },
+              { id: 'sunset', name: t('themeSunset'), colors: ['#FF6B35', '#FFB84D'] },
+              { id: 'purple', name: t('themePurple'), colors: ['#B5179E', '#F72585'] },
+              { id: 'rose', name: t('themeRose'), colors: ['#FF8FA3', '#E63946'] },
+              { id: 'midnight', name: t('themeMidnight'), colors: ['#5DADE2', '#85C1E9'] },
+            ].map((themeOption) => (
+              <TouchableOpacity
+                key={themeOption.id}
+                style={[
+                  styles.themeCard,
+                  theme === themeOption.id && styles.themeCardActive
+                ]}
+                onPress={() => handleThemeChange(themeOption.id)}
+              >
+                <View style={styles.themeColors}>
+                  <View style={[styles.themeColorBox, { backgroundColor: themeOption.colors[0] }]} />
+                  <View style={[styles.themeColorBox, { backgroundColor: themeOption.colors[1] }]} />
+                </View>
+                <Text style={[
+                  styles.themeCardText,
+                  theme === themeOption.id && styles.themeCardTextActive
+                ]}>
+                  {themeOption.name}
+                </Text>
+                {theme === themeOption.id && (
+                  <Text style={styles.themeCheckmark}>✓</Text>
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 

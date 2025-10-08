@@ -6,7 +6,8 @@ import { ActivityIndicator, Platform, SafeAreaView, ScrollView, StyleSheet, Text
 import { useSettings } from '../../contexts/SettingsContext';
 
 export default function ToolsScreen() {
-  const { isDarkMode, triggerHaptic, formatNumber, highContrast, t, language } = useSettings();
+  const { isDarkMode, triggerHaptic, formatNumber, t, language, getThemeColors } = useSettings();
+  const themeColors = getThemeColors();
   const navigation = useNavigation();
   
   const [selectedTool, setSelectedTool] = useState('currency');
@@ -435,7 +436,7 @@ export default function ToolsScreen() {
         {/* Header */}
         <View style={styles.stockHeader}>
           <View style={styles.stockIconContainer}>
-            <FontAwesome name="line-chart" size={24} color="#007AFF" />
+            <FontAwesome name="line-chart" size={24} color={themeColors.primary} />
           </View>
           <View style={styles.stockHeaderText}>
             <Text style={styles.stockTitle}>{stockData.stockName}</Text>
@@ -679,9 +680,9 @@ export default function ToolsScreen() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#007AFF" />
+                  <ActivityIndicator size="small" color={themeColors.primary} />
                 ) : (
-                  <FontAwesome name="refresh" size={14} color="#007AFF" />
+                  <FontAwesome name="refresh" size={14} color={themeColors.primary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -694,7 +695,7 @@ export default function ToolsScreen() {
                     selectedValue={fromCurrency}
                     onValueChange={(value) => setFromCurrency(value)}
                     style={[styles.picker, isDarkMode && styles.pickerDark]}
-                    dropdownIconColor={isDarkMode ? '#fff' : '#000'}
+                    dropdownIconColor={themeColors.text}
                     itemStyle={isDarkMode ? styles.pickerItemDark : styles.pickerItemLight}
                   >
                     {currencies.map((currency) => (
@@ -702,8 +703,8 @@ export default function ToolsScreen() {
                         key={currency.value} 
                         label={currency.label} 
                         value={currency.value}
-                        color={Platform.OS === 'android' ? (isDarkMode ? '#ffffff' : '#000000') : (isDarkMode ? '#ffffff' : '#000000')}
-                        style={Platform.OS === 'android' && isDarkMode ? { backgroundColor: '#333333' } : {}}
+                        color={themeColors.text}
+                        style={Platform.OS === 'android' ? { backgroundColor: themeColors.surface } : {}}
                       />
                     ))}
                   </Picker>
@@ -722,7 +723,7 @@ export default function ToolsScreen() {
                   triggerHaptic();
                 }}
               >
-                <FontAwesome name="exchange" size={20} color="#007AFF" />
+                <FontAwesome name="exchange" size={20} color={themeColors.primary} />
               </TouchableOpacity>
               
               <View style={styles.currencyColumn}>
@@ -732,7 +733,7 @@ export default function ToolsScreen() {
                     selectedValue={toCurrency}
                     onValueChange={(value) => setToCurrency(value)}
                     style={[styles.picker, isDarkMode && styles.pickerDark]}
-                    dropdownIconColor={isDarkMode ? '#fff' : '#000'}
+                    dropdownIconColor={themeColors.text}
                     itemStyle={isDarkMode ? styles.pickerItemDark : styles.pickerItemLight}
                   >
                     {currencies.map((currency) => (
@@ -740,8 +741,8 @@ export default function ToolsScreen() {
                         key={currency.value} 
                         label={currency.label} 
                         value={currency.value}
-                        color={isDarkMode ? '#ffffff' : '#000000'}
-                        style={isDarkMode ? { backgroundColor: '#333333' } : {}}
+                        color={themeColors.text}
+                        style={{ backgroundColor: themeColors.surface }}
                       />
                     ))}
                   </Picker>
@@ -755,7 +756,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={`${fromCurrency} ${t('amount')}`}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -786,7 +787,7 @@ export default function ToolsScreen() {
                     selectedValue={fromUnit}
                     onValueChange={(value) => setFromUnit(value)}
                     style={[styles.picker, isDarkMode && styles.pickerDark]}
-                    dropdownIconColor={isDarkMode ? '#fff' : '#000'}
+                    dropdownIconColor={themeColors.text}
                     itemStyle={isDarkMode ? styles.pickerItemDark : styles.pickerItemLight}
                   >
                     {lengthUnits.map((unit) => (
@@ -794,8 +795,8 @@ export default function ToolsScreen() {
                         key={unit.value} 
                         label={unit.label} 
                         value={unit.value}
-                        color={isDarkMode ? '#ffffff' : '#000000'}
-                        style={isDarkMode ? { backgroundColor: '#333333' } : {}}
+                        color={themeColors.text}
+                        style={{ backgroundColor: themeColors.surface }}
                       />
                     ))}
                   </Picker>
@@ -814,7 +815,7 @@ export default function ToolsScreen() {
                   triggerHaptic();
                 }}
               >
-                <FontAwesome name="exchange" size={20} color="#007AFF" />
+                <FontAwesome name="exchange" size={20} color={themeColors.primary} />
               </TouchableOpacity>
               
               <View style={styles.unitColumn}>
@@ -824,7 +825,7 @@ export default function ToolsScreen() {
                     selectedValue={toUnit}
                     onValueChange={(value) => setToUnit(value)}
                     style={[styles.picker, isDarkMode && styles.pickerDark]}
-                    dropdownIconColor={isDarkMode ? '#fff' : '#000'}
+                    dropdownIconColor={themeColors.text}
                     itemStyle={isDarkMode ? styles.pickerItemDark : styles.pickerItemLight}
                   >
                     {lengthUnits.map((unit) => (
@@ -832,8 +833,8 @@ export default function ToolsScreen() {
                         key={unit.value} 
                         label={unit.label} 
                         value={unit.value}
-                        color={isDarkMode ? '#ffffff' : '#000000'}
-                        style={isDarkMode ? { backgroundColor: '#333333' } : {}}
+                        color={themeColors.text}
+                        style={{ backgroundColor: themeColors.surface }}
                       />
                     ))}
                   </Picker>
@@ -847,7 +848,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('enterAmount')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -864,7 +865,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('height')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -872,7 +873,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('weight')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={amount2}
               onChangeText={setAmount2}
               keyboardType="numeric"
@@ -889,7 +890,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('originalPrice')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
@@ -897,7 +898,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={t('discountPercentage')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={discountPercent}
               onChangeText={setDiscountPercent}
               keyboardType="numeric"
@@ -914,14 +915,14 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={`${t('stockName')} (${language === 'tr' ? 'İsteğe bağlı' : 'Optional'})`}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={stockName}
               onChangeText={setStockName}
             />
             <TextInput
               style={styles.input}
               placeholder={`${t('stockPrice')} (TL)`}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={stockPrice}
               onChangeText={setStockPrice}
               keyboardType="numeric"
@@ -929,7 +930,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={`${t('stockQuantity')} (${language === 'tr' ? 'Adet' : 'Pieces'})`}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={stockQuantity}
               onChangeText={setStockQuantity}
               keyboardType="numeric"
@@ -946,7 +947,7 @@ export default function ToolsScreen() {
             <TextInput
               style={styles.input}
               placeholder={`${t('binary')} ${t('numberToConvert')} (0 & 1)`}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={binaryInput}
               onChangeText={setBinaryInput}
               keyboardType="numeric"
@@ -967,7 +968,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 8 }]}
                 placeholder={t('enterStartDate')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={startDate}
                 onChangeText={(text) => setStartDate(formatDateInput(text))}
                 keyboardType="numeric"
@@ -976,7 +977,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 12 }]}
                 placeholder={t('enterEndDate')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={endDate}
                 onChangeText={(text) => setEndDate(formatDateInput(text))}
                 keyboardType="numeric"
@@ -998,7 +999,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 8 }]}
                 placeholder={t('enterStartDate')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={startDate}
                 onChangeText={(text) => setStartDate(formatDateInput(text))}
                 keyboardType="numeric"
@@ -1007,7 +1008,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 12 }]}
                 placeholder={t('enterDaysCount')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -1028,7 +1029,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 8 }]}
                 placeholder={t('enterStartDate')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={startDate}
                 onChangeText={(text) => setStartDate(formatDateInput(text))}
                 keyboardType="numeric"
@@ -1037,7 +1038,7 @@ export default function ToolsScreen() {
               <TextInput
                 style={[styles.input, { marginBottom: 12 }]}
                 placeholder={t('enterDaysCount')}
-                placeholderTextColor={isDarkMode ? '#999' : '#666'}
+                placeholderTextColor={themeColors.textSecondary}
                 value={amount}
                 onChangeText={setAmount}
                 keyboardType="numeric"
@@ -1088,7 +1089,7 @@ export default function ToolsScreen() {
             <TextInput
               style={[styles.input, { marginBottom: 12 }]}
               placeholder={t('numberToConvert')}
-              placeholderTextColor={isDarkMode ? '#999' : '#666'}
+              placeholderTextColor={themeColors.textSecondary}
               value={binaryInput}
               onChangeText={setBinaryInput}
             />
@@ -1105,9 +1106,7 @@ export default function ToolsScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
     },
     scrollContainer: {
       flexGrow: 1,
@@ -1115,9 +1114,7 @@ export default function ToolsScreen() {
       paddingTop: Platform.OS === 'android' ? 40 : 20,
     },
     headerTitle: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 22,
       fontWeight: 'bold',
       textAlign: 'center',
@@ -1133,7 +1130,7 @@ export default function ToolsScreen() {
       paddingHorizontal: 4,
     },
     toolButton: {
-      backgroundColor: isDarkMode ? '#232323' : '#e0e0e0',
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       paddingVertical: 12,
       paddingHorizontal: 18,
@@ -1147,10 +1144,10 @@ export default function ToolsScreen() {
       elevation: 3,
     },
     selectedToolButton: {
-      backgroundColor: '#007AFF',
+      backgroundColor: themeColors.primary,
     },
     toolButtonText: {
-      color: isDarkMode ? '#fff' : '#333',
+      color: themeColors.text,
       fontSize: 14,
       fontWeight: '500',
       marginLeft: 6,
@@ -1160,7 +1157,7 @@ export default function ToolsScreen() {
       fontWeight: 'bold',
     },
     toolContainer: {
-      backgroundColor: isDarkMode ? '#232323' : '#fff',
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       padding: 20,
       shadowColor: '#000',
@@ -1170,24 +1167,24 @@ export default function ToolsScreen() {
       elevation: 2,
     },
     sectionTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 18,
       fontWeight: '600',
       marginBottom: 15,
       textAlign: 'center',
     },
     input: {
-      backgroundColor: isDarkMode ? '#292929' : '#f0f0f0',
-      color: isDarkMode ? '#fff' : '#000',
+      backgroundColor: themeColors.background,
+      color: themeColors.text,
       padding: 12,
       borderRadius: 10,
       marginBottom: 15,
       fontSize: 16,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#333' : '#ddd',
+      borderColor: themeColors.secondary,
     },
     button: {
-      backgroundColor: '#007AFF',
+      backgroundColor: themeColors.primary,
       padding: 15,
       borderRadius: 10,
       alignItems: 'center',
@@ -1202,7 +1199,7 @@ export default function ToolsScreen() {
       fontWeight: '600',
     },
     inputLabel: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 14,
       fontWeight: '500',
       marginBottom: 8,
@@ -1228,7 +1225,7 @@ export default function ToolsScreen() {
       minWidth: 0,
     },
     swapButton: {
-      backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       padding: 8,
       borderRadius: 8,
       marginHorizontal: 8,
@@ -1238,34 +1235,34 @@ export default function ToolsScreen() {
       marginTop: 25, // Label yüksekliği + picker yüksekliğinin yarısı için
     },
     pickerContainer: {
-      backgroundColor: isDarkMode ? '#333333' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#555555' : '#ddd',
+      borderColor: themeColors.secondary,
       overflow: 'hidden',
       minHeight: 50,
     },
     pickerLabel: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       marginBottom: 8,
       fontWeight: '500',
     },
     picker: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       backgroundColor: 'transparent',
       height: 50,
     },
     pickerDark: {
-      backgroundColor: '#333333',
+      backgroundColor: themeColors.surface,
     },
     pickerItemDark: {
-      backgroundColor: '#333333',
-      color: '#ffffff',
+      backgroundColor: themeColors.surface,
+      color: themeColors.text,
     },
     pickerItemLight: {
-      backgroundColor: '#ffffff',
-      color: '#000000',
+      backgroundColor: themeColors.surface,
+      color: themeColors.text,
     },
     refreshContainer: {
       flexDirection: 'row',
@@ -1275,13 +1272,13 @@ export default function ToolsScreen() {
       paddingHorizontal: 5,
     },
     dataSourceText: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 12,
       fontStyle: 'italic',
       flex: 1,
     },
     refreshButton: {
-      backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       padding: 8,
       borderRadius: 6,
       alignItems: 'center',
@@ -1289,18 +1286,18 @@ export default function ToolsScreen() {
       marginLeft: 10,
     },
     selectedCurrencyText: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 11,
       marginTop: 4,
       textAlign: 'center',
       fontStyle: 'italic',
     },
     result: {
-      backgroundColor: isDarkMode ? '#232323' : '#f0f8ff',
+      backgroundColor: themeColors.surface,
       padding: 18,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#444' : '#b3d9ff',
+      borderColor: themeColors.secondary,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: isDarkMode ? 0.3 : 0.1,
@@ -1316,7 +1313,7 @@ export default function ToolsScreen() {
       flexGrow: 1,
     },
     resultText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 15,
       fontWeight: '500',
       textAlign: 'left',
@@ -1327,7 +1324,7 @@ export default function ToolsScreen() {
     },
     // Stock Results Styles
     stockResultsContainer: {
-      backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+      backgroundColor: themeColors.surface,
       borderRadius: 16,
       overflow: 'hidden',
       marginTop: 15,
@@ -1340,16 +1337,16 @@ export default function ToolsScreen() {
     stockHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      backgroundColor: themeColors.background,
       padding: 20,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+      borderBottomColor: themeColors.secondary,
     },
     stockIconContainer: {
       width: 50,
       height: 50,
       borderRadius: 25,
-      backgroundColor: isDarkMode ? '#007AFF20' : '#007AFF15',
+      backgroundColor: themeColors.accent + '20',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 15,
@@ -1358,21 +1355,21 @@ export default function ToolsScreen() {
       flex: 1,
     },
     stockTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 20,
       fontWeight: 'bold',
       marginBottom: 2,
     },
     stockSubtitle: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 14,
       fontWeight: '500',
     },
     stockCurrentStatus: {
-      backgroundColor: isDarkMode ? '#232323' : '#f8f9fa',
+      backgroundColor: themeColors.background,
       padding: 20,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+      borderBottomColor: themeColors.secondary,
     },
     stockCurrentRow: {
       flexDirection: 'row',
@@ -1384,7 +1381,7 @@ export default function ToolsScreen() {
       paddingHorizontal: 5,
     },
     stockCurrentLabel: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 12,
       fontWeight: '500',
       marginBottom: 4,
@@ -1392,22 +1389,22 @@ export default function ToolsScreen() {
       letterSpacing: 0.5,
     },
     stockCurrentValue: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
       textAlign: 'center',
     },
     stockSection: {
-      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      backgroundColor: themeColors.surface,
       marginBottom: 1,
     },
     stockSectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      backgroundColor: themeColors.background,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#e9ecef',
+      borderBottomColor: themeColors.secondary,
     },
     stockSectionIcon: {
       marginRight: 12,
@@ -1416,34 +1413,34 @@ export default function ToolsScreen() {
       fontSize: 20,
     },
     stockSectionTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     stockLevelsScroll: {
-      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      backgroundColor: themeColors.surface,
     },
     stockLevelItem: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 16,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#2a2a2a' : '#f1f3f4',
-      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      borderBottomColor: themeColors.secondary,
+      backgroundColor: themeColors.surface,
     },
     stockLevelNumber: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: isDarkMode ? '#333' : '#e9ecef',
+      backgroundColor: themeColors.background,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 16,
     },
     stockLevelNumberText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 14,
       fontWeight: 'bold',
     },
@@ -1457,13 +1454,13 @@ export default function ToolsScreen() {
       flex: 1,
     },
     stockLevelPriceText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
       marginBottom: 2,
     },
     stockLevelPriceSubtext: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 12,
       fontWeight: '500',
     },
@@ -1482,30 +1479,30 @@ export default function ToolsScreen() {
     },
     // Date calculator styles
     section: {
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f8f9fa',
+      backgroundColor: themeColors.background,
       borderRadius: 12,
       padding: 15,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#444' : '#e9ecef',
+      borderColor: themeColors.secondary,
     },
     subsectionTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       marginBottom: 12,
       textAlign: 'center',
     },
     resultContainer: {
-      backgroundColor: isDarkMode ? '#1a472a' : '#d4edda',
+      backgroundColor: themeColors.surface,
       borderRadius: 12,
       padding: 15,
       borderWidth: 1,
-      borderColor: isDarkMode ? '#28a745' : '#c3e6cb',
+      borderColor: themeColors.accent,
     },
     resultTitle: {
       fontSize: 14,
       fontWeight: '600',
-      color: isDarkMode ? '#28a745' : '#155724',
+      color: themeColors.primary,
       marginBottom: 8,
       textAlign: 'center',
     },
@@ -1555,7 +1552,7 @@ export default function ToolsScreen() {
               <FontAwesome 
                 name={tool.icon} 
                 size={16} 
-                color={selectedTool === tool.id ? '#fff' : (isDarkMode ? '#fff' : '#333')} 
+                color={selectedTool === tool.id ? '#fff' : themeColors.text} 
               />
               <Text
                 style={[
@@ -1595,3 +1592,9 @@ export default function ToolsScreen() {
     </SafeAreaView>
   );
 }
+
+
+
+
+
+

@@ -17,7 +17,8 @@ export default function IndexScreen() {
   const [currentCalculation, setCurrentCalculation] = useState('');
   const [currentResult, setCurrentResult] = useState('');
   const navigation = useNavigation();
-  const { isDarkMode, defaultAngleUnit, highContrast, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, addNoteToHistory, updateNoteInHistory, deleteNoteFromHistory, t } = useSettings();
+  const { isDarkMode, defaultAngleUnit, triggerHaptic, formatNumber, addToHistory, getHistory, clearHistory, addNoteToHistory, updateNoteInHistory, deleteNoteFromHistory, t, getThemeColors } = useSettings();
+  const themeColors = getThemeColors();
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -221,9 +222,7 @@ export default function IndexScreen() {
   const getStyles = () => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
       paddingHorizontal: 10,
       paddingTop: Platform.OS === 'android' ? 40 : 20,
       justifyContent: 'space-between',
@@ -244,9 +243,7 @@ export default function IndexScreen() {
       paddingBottom: 10,
     },
     inputText: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#bbb') 
-        : (highContrast ? '#000000' : '#333'),
+      color: themeColors.text,
       fontSize: 22,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -255,15 +252,15 @@ export default function IndexScreen() {
       flexShrink: 1,
     },
     resultBox: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#333333' : '#232323') 
-        : (highContrast ? '#f0f0f0' : '#e0e0e0'),
+      backgroundColor: themeColors.surface,
       borderRadius: 10,
       paddingVertical: 8,
       paddingHorizontal: 12,
       marginTop: 6,
       flex: 1,
       minHeight: 50,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
     },
     resultContainer: {
       flexDirection: 'row',
@@ -277,9 +274,7 @@ export default function IndexScreen() {
       marginLeft: 12,
     },
     actionButton: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#666666' : '#333') 
-        : (highContrast ? '#e0e0e0' : '#f0f0f0'),
+      backgroundColor: themeColors.surface,
       borderRadius: 8,
       padding: 10,
       marginLeft: 6,
@@ -287,11 +282,11 @@ export default function IndexScreen() {
       justifyContent: 'center',
       minWidth: 36,
       minHeight: 36,
+      borderWidth: 2,
+      borderColor: themeColors.accent,
     },
     instantResultBox: {
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#444444' : '#2a2a2a') 
-        : (highContrast ? '#e8e8e8' : '#f5f5f5'),
+      backgroundColor: themeColors.surface,
       borderRadius: 8,
       paddingTop: 14,
       paddingBottom: 16,
@@ -303,11 +298,11 @@ export default function IndexScreen() {
       minHeight: 48,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: themeColors.secondary,
     },
     instantResultText: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#bbb') 
-        : (highContrast ? '#000000' : '#666'),
+      color: themeColors.textSecondary,
       fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'sans-serif',
@@ -319,9 +314,7 @@ export default function IndexScreen() {
       flexShrink: 1,
     },
     resultText: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 14,
       textAlign: 'right',
       fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -329,7 +322,7 @@ export default function IndexScreen() {
       flexShrink: 1,
     },
     copyHint: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 12,
       textAlign: 'right',
       marginTop: 4,
@@ -360,16 +353,18 @@ export default function IndexScreen() {
       marginHorizontal: 2,
     },
     numberButton: {
-      backgroundColor: isDarkMode ? '#333333' : '#fff',
+      backgroundColor: themeColors.surface,
+      borderWidth: 1,
+      borderColor: themeColors.textSecondary + '40',
     },
     functionButton: {
-      backgroundColor: isDarkMode ? '#a6a6a6' : '#e0e0e0',
+      backgroundColor: themeColors.secondary,
     },
     specialButton: {
-      backgroundColor: isDarkMode ? '#a6a6a6' : '#d4d4d2',
+      backgroundColor: themeColors.accent,
     },
     equalsButton: {
-      backgroundColor: isDarkMode ? '#ff9500' : '#ff9500',
+      backgroundColor: themeColors.primary,
     },
     buttonText: {
       fontSize: 24,
@@ -377,25 +372,25 @@ export default function IndexScreen() {
       fontWeight: '400',
     },
     numberButtonText: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
     },
     functionButtonText: {
-      color: isDarkMode ? '#fff' : '#000',
-      fontWeight: '400',
+      color: '#ffffff',
+      fontWeight: '500',
     },
     specialButtonText: {
-      color: '#000',
-      fontWeight: '400',
+      color: '#ffffff',
+      fontWeight: '500',
     },
     equalsButtonText: {
       color: '#fff',
       fontWeight: '600',
     },
     historyPanel: {
-      backgroundColor: isDarkMode ? '#232323' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       maxHeight: 200,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#ddd',
+      borderBottomColor: themeColors.secondary,
     },
     historyHeader: {
       flexDirection: 'row',
@@ -403,10 +398,10 @@ export default function IndexScreen() {
       alignItems: 'center',
       padding: 15,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#ddd',
+      borderBottomColor: themeColors.secondary,
     },
     historyTitle: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
     },
@@ -425,7 +420,7 @@ export default function IndexScreen() {
       maxHeight: 140,
     },
     emptyHistoryText: {
-      color: isDarkMode ? '#999' : '#666',
+      color: themeColors.textSecondary,
       textAlign: 'center',
       padding: 20,
       fontStyle: 'italic',
@@ -433,15 +428,15 @@ export default function IndexScreen() {
     historyItem: {
       padding: 12,
       borderBottomWidth: 1,
-      borderBottomColor: isDarkMode ? '#333' : '#eee',
+      borderBottomColor: themeColors.secondary + '40',
     },
     historyCalculation: {
-      color: isDarkMode ? '#bbb' : '#666',
+      color: themeColors.textSecondary,
       fontSize: 14,
       marginBottom: 2,
     },
     historyResult: {
-      color: isDarkMode ? '#fff' : '#000',
+      color: themeColors.text,
       fontSize: 16,
       fontWeight: 'bold',
     },
@@ -457,19 +452,21 @@ export default function IndexScreen() {
     noteIndicator: {
       padding: 8,
       borderRadius: 8,
-      backgroundColor: isDarkMode ? '#333333' : '#e8e8e8',
+      backgroundColor: themeColors.surface,
       marginLeft: 8,
+      borderWidth: 1,
+      borderColor: themeColors.accent,
     },
     noteContainer: {
-      backgroundColor: isDarkMode ? '#2a2a2a' : '#f0f0f0',
+      backgroundColor: themeColors.surface,
       borderRadius: 8,
       padding: 10,
       marginTop: 8,
       borderLeftWidth: 3,
-      borderLeftColor: isDarkMode ? '#ffb300' : '#007AFF',
+      borderLeftColor: themeColors.primary,
     },
     noteText: {
-      color: isDarkMode ? '#cccccc' : '#666666',
+      color: themeColors.textSecondary,
       fontSize: 14,
       fontStyle: 'italic',
       lineHeight: 20,
@@ -481,9 +478,9 @@ export default function IndexScreen() {
   return (
     <SafeAreaView style={[styles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
       <View style={{ 
-        backgroundColor: isDarkMode ? '#181818' : '#f5f5f5', 
+        backgroundColor: themeColors.background, 
         borderBottomWidth: 1, 
-        borderBottomColor: isDarkMode ? '#232323' : '#e0e0e0', 
+        borderBottomColor: themeColors.accent, 
         paddingBottom: 2 
       }}>
         <Header 
@@ -538,7 +535,7 @@ export default function IndexScreen() {
                           setShowNoteModal(true);
                         }}
                       >
-                        <FontAwesome name="sticky-note" size={14} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                        <FontAwesome name="sticky-note" size={14} color={themeColors.primary} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -578,13 +575,13 @@ export default function IndexScreen() {
               </View>
               <View style={styles.resultButtons}>
                 <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
-                  <FontAwesome name="copy" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                  <FontAwesome name="copy" size={16} color={themeColors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton} onPress={handleAddNote}>
-                  <FontAwesome name="sticky-note" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                  <FontAwesome name="sticky-note" size={16} color={themeColors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionButton} onPress={useResultInNewCalculation}>
-                  <FontAwesome name="plus" size={16} color={isDarkMode ? '#ffb300' : '#007AFF'} />
+                  <FontAwesome name="plus" size={16} color={themeColors.primary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -663,36 +660,31 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
   onHistoryPress: () => void;
   historyCount: number;
 }) {
-  const { highContrast } = useSettings();
+  const { getThemeColors } = useSettings();
+  const themeColors = getThemeColors();
   const headerStyles = StyleSheet.create({
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#000000' : '#181818') 
-        : (highContrast ? '#ffffff' : '#f5f5f5'),
+      backgroundColor: themeColors.background,
       paddingTop: Platform.OS === 'android' ? 18 : 10,
       paddingBottom: 10,
       paddingHorizontal: 18,
-      borderBottomWidth: 1,
-      borderBottomColor: isDarkMode 
-        ? (highContrast ? '#666666' : '#232323') 
-        : (highContrast ? '#cccccc' : '#e0e0e0'),
+      borderBottomWidth: 2,
+      borderBottomColor: themeColors.accent,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDarkMode ? 0.08 : 0.05,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 3,
     },
     leftSection: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     headerTitle: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 22,
       fontWeight: 'bold',
       letterSpacing: 0.5,
@@ -700,17 +692,15 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
     historyButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: isDarkMode 
-        ? (highContrast ? '#666666' : '#333') 
-        : (highContrast ? '#cccccc' : '#e0e0e0'),
+      backgroundColor: themeColors.surface,
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 15,
+      borderWidth: 1,
+      borderColor: themeColors.secondary,
     },
     historyCount: {
-      color: isDarkMode 
-        ? (highContrast ? '#ffffff' : '#fff') 
-        : (highContrast ? '#000000' : '#000'),
+      color: themeColors.text,
       fontSize: 12,
       marginLeft: 5,
       fontWeight: 'bold',
@@ -720,11 +710,11 @@ function Header({ title, isDarkMode, onHistoryPress, historyCount }: {
   return (
     <View style={headerStyles.headerContainer}>
       <View style={headerStyles.leftSection}>
-        <FontAwesome name="calculator" size={24} color="#ffb300" style={{ marginRight: 10 }} />
+        <FontAwesome name="calculator" size={24} color={themeColors.primary} style={{ marginRight: 10 }} />
         <Text style={headerStyles.headerTitle}>{title}</Text>
       </View>
       <TouchableOpacity style={headerStyles.historyButton} onPress={onHistoryPress}>
-        <FontAwesome name="history" size={16} color={isDarkMode ? '#ffb300' : '#666'} />
+        <FontAwesome name="history" size={16} color={themeColors.accent} />
         <Text style={headerStyles.historyCount}>{historyCount}</Text>
       </TouchableOpacity>
     </View>
