@@ -93,8 +93,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Keep this in sync with app.json `expo.version` / `android.versionCode`
-        versionCode 12
-        versionName "1.0.9"
+        versionCode 13
+        versionName "1.1.0"
     }
     signingConfigs {
         debug {

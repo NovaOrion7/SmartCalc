@@ -37,14 +37,26 @@ export default function IndexScreen() {
     }
     
     try {
-      // Basit bir kontrol: son karakter operatör değilse hesapla
+      // Basit bir kontrol: son karakter operatör veya % ise hesaplama yapma
       const lastChar = input.slice(-1);
-      if (['+', '-', '*', '/', '^', '('].includes(lastChar)) {
+      if (['+', '-', '*', '/', '^', '(', '%'].includes(lastChar)) {
         setInstantResult('');
         return;
       }
 
-      let expr = input.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
+      // Yüzde işlemlerini dönüştür
+      let processedInput = input;
+      
+      // Önce A%B(expr) formatını yakala
+      processedInput = processedInput.replace(/(\d+\.?\d*)%(\d+\.?\d*)(\()/g, '($1*$2/100)*$3');
+      
+      // Sonra A%B formatını yakala
+      processedInput = processedInput.replace(/(\d+\.?\d*)%(\d+\.?\d*)/g, '($1*$2/100)');
+      
+      // Tek başına % varsa basitçe /100 yap
+      processedInput = processedInput.replace(/(\d+\.?\d*)%/g, '($1/100)');
+
+      let expr = processedInput.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
       if (defaultAngleUnit === 'degree') {
         expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => `${fn}(((${arg}) * pi / 180))`);
       }
@@ -61,7 +73,21 @@ export default function IndexScreen() {
     
     if (value === '=') {
       try {
-        let expr = input.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
+        // Yüzde işlemlerini dönüştür
+        let processedInput = input;
+        
+        // Önce A%B(expr) formatını yakala (yüzde sonrası parantez)
+        // Örnek: 1000%10(5+5) -> 1000*(10/100)*(5+5)
+        processedInput = processedInput.replace(/(\d+\.?\d*)%(\d+\.?\d*)(\()/g, '($1*$2/100)*$3');
+        
+        // Sonra A%B formatını yakala (normal yüzde işlemi)
+        // Örnek: 1000%10 -> 1000*(10/100)
+        processedInput = processedInput.replace(/(\d+\.?\d*)%(\d+\.?\d*)/g, '($1*$2/100)');
+        
+        // Tek başına % varsa (örn: 50%) basitçe /100 yap
+        processedInput = processedInput.replace(/(\d+\.?\d*)%/g, '($1/100)');
+        
+        let expr = processedInput.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '^').replace(/π/g, 'pi');
         if (defaultAngleUnit === 'degree') {
           // sin(x), cos(x), tan(x) fonksiyonlarının argümanlarını derece modunda radyana çevir
           expr = expr.replace(/(sin|cos|tan)\(([^()]+)\)/g, (match, fn, arg) => `${fn}(((${arg}) * pi / 180))`);
@@ -97,9 +123,10 @@ export default function IndexScreen() {
       updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === '%') {
-      const newInput = input + '/100';
+      // Yüzde işlemi - sadece % sembolünü ekle, hesaplama = basıldığında yapılacak
+      const newInput = input + '%';
       setInput(newInput);
-      updateDisplayInput(input + '%');
+      updateDisplayInput(newInput);
       calculateInstantResult(newInput);
     } else if (value === '×') {
       const newInput = input + '*';
