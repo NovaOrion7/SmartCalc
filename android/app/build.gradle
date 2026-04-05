@@ -92,9 +92,9 @@ android {
         applicationId 'com.ismailjacob.SmartCalc'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // Keep this in sync with app.json `expo.version` / `android.versionCode`
+        // Keep this in sync with app.json `expo.version` / `android.versionCode 14
         versionCode 13
-        versionName "1.1.0"
+        versionName "1.2.0"
     }
     signingConfigs {
         debug {

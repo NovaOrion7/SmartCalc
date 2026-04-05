@@ -31,6 +31,17 @@ allprojects {
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
   }
+
+}
+
+subprojects {
+  afterEvaluate { project ->
+    project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+      compilerOptions {
+        freeCompilerArgs.addAll(["-Xskip-metadata-version-check"])
+      }
+    }
+  }
 }
 
 apply plugin: "expo-root-project"
