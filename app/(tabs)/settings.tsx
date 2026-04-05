@@ -1,7 +1,18 @@
-import { useSettings } from '@/contexts/SettingsContext';
-import { useNavigation } from 'expo-router';
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
-import { Alert, Animated, Linking, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useSettings } from "@/contexts/SettingsContext";
+import { useNavigation } from "expo-router";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
+import {
+    Alert,
+    Animated,
+    Linking,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
@@ -18,9 +29,9 @@ export default function SettingsScreen() {
     clearHistory,
     clearScientificHistory,
     t,
-    getThemeColors
+    getThemeColors,
   } = useSettings();
-  
+
   const themeColors = getThemeColors();
 
   // Animation refs
@@ -46,7 +57,7 @@ export default function SettingsScreen() {
           duration: 1500,
           useNativeDriver: false, // Changed to false for compatibility
         }),
-      ])
+      ]),
     );
 
     pulseAnimation.start();
@@ -78,87 +89,95 @@ export default function SettingsScreen() {
 
   const handleAngleUnitChange = (unit: string) => {
     triggerHaptic();
-    updateSettings({ defaultAngleUnit: unit as 'degree' | 'radian' });
+    updateSettings({ defaultAngleUnit: unit as "degree" | "radian" });
   };
 
   const handleLanguageChange = (lang: string) => {
     triggerHaptic();
-    updateSettings({ language: lang as 'tr' | 'en' });
+    updateSettings({ language: lang as "tr" | "en" });
   };
 
   const handleThemeChange = (selectedTheme: string) => {
     triggerHaptic();
-    updateSettings({ theme: selectedTheme as 'none' | 'default' | 'ocean' | 'forest' | 'sunset' | 'purple' | 'rose' | 'midnight' });
+    updateSettings({
+      theme: selectedTheme as
+        | "none"
+        | "default"
+        | "ocean"
+        | "forest"
+        | "sunset"
+        | "purple"
+        | "rose"
+        | "midnight",
+    });
   };
 
   const resetSettings = () => {
-    Alert.alert(
-      t('resetSettingsTitle'),
-      t('resetSettingsDesc'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('reset'),
-          style: 'destructive',
-          onPress: () => {
-            triggerHaptic();
-            updateSettings({
-              isDarkMode: true,
-              showDecimals: true,
-              vibrationEnabled: true,
-              soundEnabled: false,
-              defaultAngleUnit: 'degree'
-            });
-          }
-        }
-      ]
-    );
+    Alert.alert(t("resetSettingsTitle"), t("resetSettingsDesc"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("reset"),
+        style: "destructive",
+        onPress: () => {
+          triggerHaptic();
+          updateSettings({
+            isDarkMode: true,
+            showDecimals: true,
+            vibrationEnabled: true,
+            soundEnabled: false,
+            defaultAngleUnit: "degree",
+          });
+        },
+      },
+    ]);
   };
 
   const clearHistoryConfirm = () => {
-    Alert.alert(
-      t('clearHistoryTitle'),
-      t('clearHistoryDesc'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('clear'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              triggerHaptic();
-              // Gerçek geçmiş temizleme fonksiyonunu kullan
-              await clearHistory();
-              Alert.alert(t('success'), t('historyCleared'));
-            } catch {
-              Alert.alert(t('error'), 'An error occurred while clearing history.');
-            }
+    Alert.alert(t("clearHistoryTitle"), t("clearHistoryDesc"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("clear"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            triggerHaptic();
+            // Gerçek geçmiş temizleme fonksiyonunu kullan
+            await clearHistory();
+            Alert.alert(t("success"), t("historyCleared"));
+          } catch {
+            Alert.alert(
+              t("error"),
+              "An error occurred while clearing history.",
+            );
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const clearScientificHistoryConfirm = () => {
     Alert.alert(
-      t('clearScientificHistoryTitle'),
-      t('clearScientificHistoryDesc'),
+      t("clearScientificHistoryTitle"),
+      t("clearScientificHistoryDesc"),
       [
-        { text: t('cancel'), style: 'cancel' },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: t('clear'),
-          style: 'destructive',
+          text: t("clear"),
+          style: "destructive",
           onPress: async () => {
             try {
               triggerHaptic();
               await clearScientificHistory();
-              Alert.alert(t('success'), t('scientificHistoryCleared'));
+              Alert.alert(t("success"), t("scientificHistoryCleared"));
             } catch {
-              Alert.alert(t('error'), 'An error occurred while clearing scientific history.');
+              Alert.alert(
+                t("error"),
+                "An error occurred while clearing scientific history.",
+              );
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -178,9 +197,10 @@ export default function SettingsScreen() {
       }),
     ]).start();
 
-    const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.ismailjacob.SmartCalc';
+    const playStoreUrl =
+      "https://play.google.com/store/apps/details?id=com.ismailjacob.SmartCalc";
     Linking.openURL(playStoreUrl).catch(() => {
-      Alert.alert(t('error'), 'Play Store açılamıyor.');
+      Alert.alert(t("error"), "Play Store açılamıyor.");
     });
   };
 
@@ -200,9 +220,10 @@ export default function SettingsScreen() {
       }),
     ]).start();
 
-    const developerUrl = 'https://play.google.com/store/apps/dev?id=6946359108152061435';
+    const developerUrl =
+      "https://play.google.com/store/apps/dev?id=6946359108152061435";
     Linking.openURL(developerUrl).catch(() => {
-      Alert.alert(t('error'), 'Play Store açılamıyor.');
+      Alert.alert(t("error"), "Play Store açılamıyor.");
     });
   };
 
@@ -217,38 +238,38 @@ export default function SettingsScreen() {
     },
     title: {
       fontSize: 28,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: themeColors.text,
       marginTop: 20,
       marginBottom: 30,
-      textAlign: 'center',
+      textAlign: "center",
     },
     section: {
       backgroundColor: themeColors.surface,
       borderRadius: 12,
       padding: 20,
       marginBottom: 20,
-      shadowColor: '#000',
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
       borderWidth: 1,
-      borderColor: themeColors.secondary + '40',
+      borderColor: themeColors.secondary + "40",
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       color: themeColors.text,
       marginBottom: 15,
     },
     settingItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       paddingVertical: 15,
       borderBottomWidth: 1,
-      borderBottomColor: themeColors.secondary + '40',
+      borderBottomColor: themeColors.secondary + "40",
     },
     lastSettingItem: {
       borderBottomWidth: 0,
@@ -264,7 +285,7 @@ export default function SettingsScreen() {
       marginTop: 2,
     },
     angleButtonContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 10,
     },
     angleButton: {
@@ -284,10 +305,10 @@ export default function SettingsScreen() {
       fontSize: 14,
     },
     angleButtonTextActive: {
-      color: '#fff',
+      color: "#fff",
     },
     languageButtonContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 10,
     },
     languageButton: {
@@ -307,24 +328,24 @@ export default function SettingsScreen() {
       fontSize: 14,
     },
     languageButtonTextActive: {
-      color: '#fff',
+      color: "#fff",
     },
     themeGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: 12,
       marginTop: 15,
     },
     themeCard: {
-      width: '30%',
+      width: "30%",
       aspectRatio: 1,
       borderRadius: 12,
       padding: 10,
       backgroundColor: themeColors.surface,
       borderWidth: 2,
       borderColor: themeColors.secondary,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     themeCardActive: {
       borderColor: themeColors.primary,
@@ -332,7 +353,7 @@ export default function SettingsScreen() {
       borderWidth: 3,
     },
     themeColors: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 6,
       marginBottom: 8,
     },
@@ -344,148 +365,159 @@ export default function SettingsScreen() {
     themeCardText: {
       fontSize: 12,
       color: themeColors.text,
-      textAlign: 'center',
-      fontWeight: '500',
+      textAlign: "center",
+      fontWeight: "500",
     },
     themeCardTextActive: {
       color: themeColors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     themeCheckmark: {
-      position: 'absolute',
+      position: "absolute",
       top: 5,
       right: 5,
       fontSize: 18,
       color: themeColors.primary,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     resetButton: {
-      backgroundColor: '#FF3B30',
+      backgroundColor: "#FF3B30",
       borderRadius: 12,
       padding: 15,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: 10,
     },
     rateButton: {
-      backgroundColor: '#34C759',
+      backgroundColor: "#34C759",
       borderRadius: 12,
       padding: 15,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: 10,
     },
     moreAppsButton: {
-      backgroundColor: '#007AFF',
+      backgroundColor: "#007AFF",
       borderRadius: 12,
       padding: 15,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: 10,
     },
     clearButton: {
-      backgroundColor: '#FF9500',
+      backgroundColor: "#FF9500",
       borderRadius: 12,
       padding: 15,
-      alignItems: 'center',
+      alignItems: "center",
       marginTop: 10,
     },
     buttonText: {
-      color: '#fff',
+      color: "#fff",
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     versionText: {
-      textAlign: 'center',
+      textAlign: "center",
       color: themeColors.textSecondary,
       fontSize: 14,
       marginTop: 20,
     },
     developerText: {
-      textAlign: 'center',
+      textAlign: "center",
       color: themeColors.textSecondary,
       fontSize: 12,
       marginTop: 5,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>{t('settings')}</Text>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>{t("settings")}</Text>
 
         {/* Görünüm Ayarları */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('appearance')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("appearance")}</Text>
+
           <View style={styles.settingItem}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('darkMode')}</Text>
-              <Text style={styles.settingDescription}>{t('darkModeDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("darkMode")}</Text>
+              <Text style={styles.settingDescription}>{t("darkModeDesc")}</Text>
             </View>
             <Switch
               value={isDarkMode}
               onValueChange={handleDarkModeToggle}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={isDarkMode ? '#f5dd4b' : '#f4f3f4'}
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={isDarkMode ? "#f5dd4b" : "#f4f3f4"}
             />
           </View>
 
           <View style={styles.settingItem}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('showDecimals')}</Text>
-              <Text style={styles.settingDescription}>{t('showDecimalsDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("showDecimals")}</Text>
+              <Text style={styles.settingDescription}>
+                {t("showDecimalsDesc")}
+              </Text>
             </View>
             <Switch
               value={showDecimals}
               onValueChange={handleDecimalsToggle}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={showDecimals ? '#f5dd4b' : '#f4f3f4'}
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={showDecimals ? "#f5dd4b" : "#f4f3f4"}
             />
           </View>
 
           <View style={styles.settingItem}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('highContrast')}</Text>
-              <Text style={styles.settingDescription}>{t('highContrastDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("highContrast")}</Text>
+              <Text style={styles.settingDescription}>
+                {t("highContrastDesc")}
+              </Text>
             </View>
             <Switch
               value={highContrast}
               onValueChange={handleHighContrastToggle}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={highContrast ? '#f5dd4b' : '#f4f3f4'}
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={highContrast ? "#f5dd4b" : "#f4f3f4"}
             />
           </View>
 
           <View style={[styles.settingItem, styles.lastSettingItem]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('language')}</Text>
-              <Text style={styles.settingDescription}>{t('languageDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("language")}</Text>
+              <Text style={styles.settingDescription}>{t("languageDesc")}</Text>
             </View>
             <View style={styles.languageButtonContainer}>
               <TouchableOpacity
                 style={[
                   styles.languageButton,
-                  language === 'tr' && styles.languageButtonActive
+                  language === "tr" && styles.languageButtonActive,
                 ]}
-                onPress={() => handleLanguageChange('tr')}
+                onPress={() => handleLanguageChange("tr")}
               >
-                <Text style={[
-                  styles.languageButtonText,
-                  language === 'tr' && styles.languageButtonTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    language === "tr" && styles.languageButtonTextActive,
+                  ]}
+                >
                   TR
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.languageButton,
-                  language === 'en' && styles.languageButtonActive
+                  language === "en" && styles.languageButtonActive,
                 ]}
-                onPress={() => handleLanguageChange('en')}
+                onPress={() => handleLanguageChange("en")}
               >
-                <Text style={[
-                  styles.languageButtonText,
-                  language === 'en' && styles.languageButtonTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.languageButtonText,
+                    language === "en" && styles.languageButtonTextActive,
+                  ]}
+                >
                   EN
                 </Text>
               </TouchableOpacity>
@@ -495,36 +527,80 @@ export default function SettingsScreen() {
 
         {/* Tema Ayarları */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('theme')}</Text>
-          <Text style={styles.settingDescription}>{t('themeDesc')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("theme")}</Text>
+          <Text style={styles.settingDescription}>{t("themeDesc")}</Text>
+
           <View style={styles.themeGrid}>
             {[
-              { id: 'none', name: t('themeNone'), colors: ['#666666', '#999999'] },
-              { id: 'default', name: t('themeDefault'), colors: ['#ff9500', '#007AFF'] },
-              { id: 'ocean', name: t('themeOcean'), colors: ['#00A8E8', '#00C9FF'] },
-              { id: 'forest', name: t('themeForest'), colors: ['#52B788', '#40916C'] },
-              { id: 'sunset', name: t('themeSunset'), colors: ['#FF6B35', '#FFB84D'] },
-              { id: 'purple', name: t('themePurple'), colors: ['#B5179E', '#F72585'] },
-              { id: 'rose', name: t('themeRose'), colors: ['#FF8FA3', '#E63946'] },
-              { id: 'midnight', name: t('themeMidnight'), colors: ['#5DADE2', '#85C1E9'] },
+              {
+                id: "none",
+                name: t("themeNone"),
+                colors: ["#666666", "#999999"],
+              },
+              {
+                id: "default",
+                name: t("themeDefault"),
+                colors: ["#ff9500", "#007AFF"],
+              },
+              {
+                id: "ocean",
+                name: t("themeOcean"),
+                colors: ["#00A8E8", "#00C9FF"],
+              },
+              {
+                id: "forest",
+                name: t("themeForest"),
+                colors: ["#52B788", "#40916C"],
+              },
+              {
+                id: "sunset",
+                name: t("themeSunset"),
+                colors: ["#FF6B35", "#FFB84D"],
+              },
+              {
+                id: "purple",
+                name: t("themePurple"),
+                colors: ["#B5179E", "#F72585"],
+              },
+              {
+                id: "rose",
+                name: t("themeRose"),
+                colors: ["#FF8FA3", "#E63946"],
+              },
+              {
+                id: "midnight",
+                name: t("themeMidnight"),
+                colors: ["#5DADE2", "#85C1E9"],
+              },
             ].map((themeOption) => (
               <TouchableOpacity
                 key={themeOption.id}
                 style={[
                   styles.themeCard,
-                  theme === themeOption.id && styles.themeCardActive
+                  theme === themeOption.id && styles.themeCardActive,
                 ]}
                 onPress={() => handleThemeChange(themeOption.id)}
               >
                 <View style={styles.themeColors}>
-                  <View style={[styles.themeColorBox, { backgroundColor: themeOption.colors[0] }]} />
-                  <View style={[styles.themeColorBox, { backgroundColor: themeOption.colors[1] }]} />
+                  <View
+                    style={[
+                      styles.themeColorBox,
+                      { backgroundColor: themeOption.colors[0] },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.themeColorBox,
+                      { backgroundColor: themeOption.colors[1] },
+                    ]}
+                  />
                 </View>
-                <Text style={[
-                  styles.themeCardText,
-                  theme === themeOption.id && styles.themeCardTextActive
-                ]}>
+                <Text
+                  style={[
+                    styles.themeCardText,
+                    theme === themeOption.id && styles.themeCardTextActive,
+                  ]}
+                >
                   {themeOption.name}
                 </Text>
                 {theme === themeOption.id && (
@@ -537,40 +613,48 @@ export default function SettingsScreen() {
 
         {/* Hesaplama Ayarları */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('calculation')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("calculation")}</Text>
+
           <View style={[styles.settingItem, styles.lastSettingItem]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('defaultAngleUnit')}</Text>
-              <Text style={styles.settingDescription}>{t('defaultAngleUnitDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("defaultAngleUnit")}</Text>
+              <Text style={styles.settingDescription}>
+                {t("defaultAngleUnitDesc")}
+              </Text>
             </View>
             <View style={styles.angleButtonContainer}>
               <TouchableOpacity
                 style={[
                   styles.angleButton,
-                  defaultAngleUnit === 'degree' && styles.angleButtonActive
+                  defaultAngleUnit === "degree" && styles.angleButtonActive,
                 ]}
-                onPress={() => handleAngleUnitChange('degree')}
+                onPress={() => handleAngleUnitChange("degree")}
               >
-                <Text style={[
-                  styles.angleButtonText,
-                  defaultAngleUnit === 'degree' && styles.angleButtonTextActive
-                ]}>
-                  {t('degree')}
+                <Text
+                  style={[
+                    styles.angleButtonText,
+                    defaultAngleUnit === "degree" &&
+                      styles.angleButtonTextActive,
+                  ]}
+                >
+                  {t("degree")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.angleButton,
-                  defaultAngleUnit === 'radian' && styles.angleButtonActive
+                  defaultAngleUnit === "radian" && styles.angleButtonActive,
                 ]}
-                onPress={() => handleAngleUnitChange('radian')}
+                onPress={() => handleAngleUnitChange("radian")}
               >
-                <Text style={[
-                  styles.angleButtonText,
-                  defaultAngleUnit === 'radian' && styles.angleButtonTextActive
-                ]}>
-                  {t('radian')}
+                <Text
+                  style={[
+                    styles.angleButtonText,
+                    defaultAngleUnit === "radian" &&
+                      styles.angleButtonTextActive,
+                  ]}
+                >
+                  {t("radian")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -579,50 +663,58 @@ export default function SettingsScreen() {
 
         {/* Etkileşim Ayarları */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('interaction')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("interaction")}</Text>
+
           <View style={[styles.settingItem, styles.lastSettingItem]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>{t('vibration')}</Text>
-              <Text style={styles.settingDescription}>{t('vibrationDesc')}</Text>
+              <Text style={styles.settingLabel}>{t("vibration")}</Text>
+              <Text style={styles.settingDescription}>
+                {t("vibrationDesc")}
+              </Text>
             </View>
             <Switch
               value={vibrationEnabled}
               onValueChange={handleVibrationToggle}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={vibrationEnabled ? '#f5dd4b' : '#f4f3f4'}
+              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              thumbColor={vibrationEnabled ? "#f5dd4b" : "#f4f3f4"}
             />
           </View>
         </View>
 
         {/* Veri Yönetimi */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('dataManagement')}</Text>
-          
-          <TouchableOpacity style={styles.clearButton} onPress={clearHistoryConfirm}>
-            <Text style={styles.buttonText}>{t('clearHistory')}</Text>
+          <Text style={styles.sectionTitle}>{t("dataManagement")}</Text>
+
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearHistoryConfirm}
+          >
+            <Text style={styles.buttonText}>{t("clearHistory")}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.clearButton} onPress={clearScientificHistoryConfirm}>
-            <Text style={styles.buttonText}>{t('clearScientificHistory')}</Text>
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={clearScientificHistoryConfirm}
+          >
+            <Text style={styles.buttonText}>{t("clearScientificHistory")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.resetButton} onPress={resetSettings}>
-            <Text style={styles.buttonText}>{t('resetSettings')}</Text>
+            <Text style={styles.buttonText}>{t("resetSettings")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Uygulama Bilgileri */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('application')}</Text>
-          
+          <Text style={styles.sectionTitle}>{t("application")}</Text>
+
           <Animated.View
             style={{
               transform: [{ scale: rateButtonScale }],
             }}
           >
             <TouchableOpacity style={styles.rateButton} onPress={rateApp}>
-              <Text style={styles.buttonText}>⭐ {t('rateApp')}</Text>
+              <Text style={styles.buttonText}>⭐ {t("rateApp")}</Text>
             </TouchableOpacity>
           </Animated.View>
 
@@ -632,12 +724,12 @@ export default function SettingsScreen() {
             }}
           >
             <TouchableOpacity style={styles.moreAppsButton} onPress={moreApps}>
-              <Text style={styles.buttonText}>📱 {t('moreApps')}</Text>
+              <Text style={styles.buttonText}>📱 {t("moreApps")}</Text>
             </TouchableOpacity>
           </Animated.View>
-          
-          <Text style={styles.versionText}>SmartCalc v1.1.0</Text>
-          <Text style={styles.developerText}>{t('developer')}</Text>
+
+          <Text style={styles.versionText}>SmartCalc v1.2.0</Text>
+          <Text style={styles.developerText}>{t("developer")}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
