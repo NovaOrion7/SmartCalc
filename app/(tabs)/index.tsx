@@ -6,14 +6,15 @@ import { useNavigation } from "expo-router";
 import { Parser } from "expr-eval";
 import React, { useLayoutEffect, useState } from "react";
 import {
-  Alert,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function IndexScreen() {
@@ -278,14 +279,16 @@ export default function IndexScreen() {
         backgroundColor: themeColors.background,
         paddingHorizontal: 10,
         paddingTop: Platform.OS === "android" ? 40 : 20,
-        justifyContent: "flex-start",
       },
       displayContainer: {
-        marginBottom: 10,
-        minHeight: 90,
+        flex: 1,
         paddingHorizontal: 20,
         paddingTop: 10,
         justifyContent: "flex-end",
+      },
+      inputScroll: {
+        flexGrow: 0,
+        marginBottom: 4,
       },
       inputText: {
         color: themeColors.text,
@@ -294,7 +297,7 @@ export default function IndexScreen() {
         fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
         marginBottom: 2,
         lineHeight: 24,
-        flexShrink: 1,
+        padding: 0,
       },
       resultBox: {
         backgroundColor: themeColors.surface,
@@ -373,8 +376,11 @@ export default function IndexScreen() {
         marginTop: 4,
         fontStyle: "italic",
       },
-      keypadScroll: {
-        paddingBottom: 10,
+      keypadContainer: {
+        paddingBottom: 4,
+        paddingTop: 6,
+        borderTopWidth: 1,
+        borderTopColor: themeColors.accent + "30",
       },
       row: {
         flexDirection: "row",
@@ -611,61 +617,75 @@ export default function IndexScreen() {
       )}
 
       <View style={styles.displayContainer}>
-        <Text style={styles.inputText}>{displayInput || "0"}</Text>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
+          showsVerticalScrollIndicator={false}
+        >
+          <TextInput
+            style={[styles.inputText, styles.inputScroll]}
+            value={displayInput || "0"}
+            editable={false}
+            selectTextOnFocus={false}
+            scrollEnabled={true}
+            multiline={false}
+            selection={{
+              start: (displayInput || "0").length,
+              end: (displayInput || "0").length,
+            }}
+          />
 
-        {/* Anında sonuç göster */}
-        {instantResult && !result && (
-          <View style={styles.instantResultBox}>
-            <Text style={styles.instantResultText}>= {instantResult}</Text>
-          </View>
-        )}
+          {/* Anında sonuç göster */}
+          {instantResult && !result && (
+            <View style={styles.instantResultBox}>
+              <Text style={styles.instantResultText}>= {instantResult}</Text>
+            </View>
+          )}
 
-        {/* Nihai sonuç ve butonlar */}
-        {result !== "" && (
-          <View style={styles.resultContainer}>
-            <View style={styles.resultBox}>
-              <Text style={styles.resultText}>= {result}</Text>
+          {/* Nihai sonuç ve butonlar */}
+          {result !== "" && (
+            <View style={styles.resultContainer}>
+              <View style={styles.resultBox}>
+                <Text style={styles.resultText}>= {result}</Text>
+              </View>
+              <View style={styles.resultButtons}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={copyToClipboard}
+                >
+                  <FontAwesome
+                    name="copy"
+                    size={16}
+                    color={themeColors.primary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleAddNote}
+                >
+                  <FontAwesome
+                    name="sticky-note"
+                    size={16}
+                    color={themeColors.primary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={useResultInNewCalculation}
+                >
+                  <FontAwesome
+                    name="plus"
+                    size={16}
+                    color={themeColors.primary}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.resultButtons}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={copyToClipboard}
-              >
-                <FontAwesome
-                  name="copy"
-                  size={16}
-                  color={themeColors.primary}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={handleAddNote}
-              >
-                <FontAwesome
-                  name="sticky-note"
-                  size={16}
-                  color={themeColors.primary}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={useResultInNewCalculation}
-              >
-                <FontAwesome
-                  name="plus"
-                  size={16}
-                  color={themeColors.primary}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+          )}
+        </ScrollView>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.keypadScroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.keypadContainer}>
         {buttons.map((row, i) => (
           <View key={i} style={styles.row}>
             {row.map((value, j) => {
@@ -704,7 +724,7 @@ export default function IndexScreen() {
             })}
           </View>
         ))}
-      </ScrollView>
+      </View>
 
       <NoteModal
         visible={showNoteModal}
