@@ -2,7 +2,7 @@
   "expo": {
     "name": "Smart Calc",
     "slug": "SmartCalc",
-    "version": "1.2.2",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartcalc",
@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 16,
+      "versionCode": 18,
       "edgeToEdgeEnabled": true,
       "package": "com.ismailjacob.SmartCalc"
     },
@@ -26,6 +26,16 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0"
+          }
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
