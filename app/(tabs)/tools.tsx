@@ -2,10 +2,11 @@ import { FontAwesome } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { setStringAsync } from "expo-clipboard";
 import { useNavigation } from "expo-router";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     SafeAreaView,
     ScrollView,
@@ -15,6 +16,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSettings } from "../../contexts/SettingsContext";
 
 export default function ToolsScreen() {
@@ -112,22 +114,287 @@ export default function ToolsScreen() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copiedToastText, setCopiedToastText] = useState("");
 
-  const tools = [
-    { id: "currency", title: t("currency"), icon: "money" as const },
-    { id: "unit", title: t("unit"), icon: "arrows-h" as const },
-    { id: "bmi", title: t("bmi"), icon: "heart" as const },
-    { id: "discount", title: t("discount"), icon: "percent" as const },
-    { id: "stock", title: t("stock"), icon: "line-chart" as const },
-    { id: "cost", title: t("cost"), icon: "tags" as const },
-    { id: "stopaj", title: t("stopaj"), icon: "pie-chart" as const },
-    { id: "binary", title: t("binary"), icon: "code" as const },
-    { id: "base", title: t("base"), icon: "calculator" as const },
-    { id: "date", title: t("dateCalculator"), icon: "calendar" as const },
-    { id: "kdv", title: t("kdv"), icon: "file-text-o" as const },
-    { id: "loan", title: t("loan"), icon: "credit-card" as const },
-    { id: "tip", title: t("tip"), icon: "cutlery" as const },
-    { id: "age", title: t("age"), icon: "birthday-cake" as const },
+  type ToolCategory = "all" | "favorites" | "finance" | "converter" | "life";
+
+  interface ToolItem {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: React.ComponentProps<typeof FontAwesome>["name"];
+    category: "finance" | "converter" | "life";
+  }
+
+  const allToolItems: ToolItem[] = [
+    {
+      id: "currency",
+      title: t("currency"),
+      subtitle: t("currencyConverter"),
+      icon: "money",
+      category: "finance",
+    },
+    {
+      id: "stopaj",
+      title: t("stopaj"),
+      subtitle: t("stopajCalculator"),
+      icon: "pie-chart",
+      category: "finance",
+    },
+    {
+      id: "cost",
+      title: t("cost"),
+      subtitle: t("costCalculator"),
+      icon: "tags",
+      category: "finance",
+    },
+    {
+      id: "kdv",
+      title: t("kdv"),
+      subtitle: t("kdvCalculator"),
+      icon: "file-text-o",
+      category: "finance",
+    },
+    {
+      id: "loan",
+      title: t("loan"),
+      subtitle: t("loanCalculator"),
+      icon: "credit-card",
+      category: "finance",
+    },
+    {
+      id: "discount",
+      title: t("discount"),
+      subtitle: t("discountCalculator"),
+      icon: "percent",
+      category: "finance",
+    },
+    {
+      id: "stock",
+      title: t("stock"),
+      subtitle: t("stockCalculator"),
+      icon: "line-chart",
+      category: "finance",
+    },
+    {
+      id: "unit",
+      title: t("unit"),
+      subtitle: t("unitConverter"),
+      icon: "arrows-h",
+      category: "converter",
+    },
+    {
+      id: "binary",
+      title: t("binary"),
+      subtitle: t("binaryConverter"),
+      icon: "code",
+      category: "converter",
+    },
+    {
+      id: "base",
+      title: t("base"),
+      subtitle: t("baseConverter"),
+      icon: "calculator",
+      category: "converter",
+    },
+    {
+      id: "date",
+      title: t("date"),
+      subtitle: t("dateCalculator"),
+      icon: "calendar",
+      category: "life",
+    },
+    {
+      id: "age",
+      title: t("age"),
+      subtitle: t("ageCalculator"),
+      icon: "birthday-cake",
+      category: "life",
+    },
+    {
+      id: "bmi",
+      title: t("bmi"),
+      subtitle: t("bmiCalculator"),
+      icon: "heart",
+      category: "life",
+    },
+    {
+      id: "tip",
+      title: t("tip"),
+      subtitle: t("tipCalculator"),
+      icon: "cutlery",
+      category: "life",
+    },
   ];
+
+  const categories: {
+    id: ToolCategory;
+    title: string;
+    icon: React.ComponentProps<typeof FontAwesome>["name"];
+  }[] = [
+    { id: "all", title: t("categoryAll"), icon: "th" },
+    { id: "favorites", title: t("favorites"), icon: "star" },
+    { id: "finance", title: t("categoryFinance"), icon: "line-chart" },
+    { id: "converter", title: t("categoryConverter"), icon: "exchange" },
+    { id: "life", title: t("categoryLife"), icon: "heartbeat" },
+  ];
+
+  const toolScrollRef = useRef<ScrollView>(null);
+  const modalGridScrollRef = useRef<ScrollView>(null);
+
+  const [favoriteTools, setFavoriteTools] = useState<string[]>([
+    "currency",
+    "stopaj",
+    "cost",
+    "kdv",
+  ]);
+  const [activeCategory, setActiveCategory] = useState<ToolCategory>("all");
+  const [isGridModalVisible, setIsGridModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    toolScrollRef.current?.scrollTo({ x: 0, animated: false });
+  }, [activeCategory]);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const saved = await AsyncStorage.getItem("@smartcalc_favorite_tools");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setFavoriteTools(parsed);
+          }
+        }
+      } catch (e) {
+        console.log("Error loading favorite tools", e);
+      }
+    };
+    loadFavorites();
+  }, []);
+
+  const toggleFavorite = async (toolId: string) => {
+    triggerHaptic();
+    let updated: string[];
+    const isFav = favoriteTools.includes(toolId);
+    if (isFav) {
+      updated = favoriteTools.filter((id) => id !== toolId);
+      setCopiedToastText(t("favoriteRemoved"));
+      if (activeCategory === "favorites" && selectedTool === toolId) {
+        if (updated.length > 0) {
+          switchTool(updated[0]);
+        }
+      }
+    } else {
+      updated = [...favoriteTools, toolId];
+      setCopiedToastText(t("favoriteAdded"));
+    }
+    setFavoriteTools(updated);
+    setCopiedToast(true);
+    setTimeout(() => {
+      setCopiedToast(false);
+    }, 1800);
+    try {
+      await AsyncStorage.setItem(
+        "@smartcalc_favorite_tools",
+        JSON.stringify(updated),
+      );
+    } catch (e) {
+      console.log("Error saving favorite tools", e);
+    }
+  };
+
+  const switchTool = (toolId: string) => {
+    triggerHaptic();
+    setSelectedTool(toolId);
+    setResult("");
+    setAnalysisCard(null);
+    setCopiedToast(false);
+    setCopiedKey(null);
+    setCopiedToastText("");
+    setAmount("");
+    setAmount2("");
+    setStockName("");
+    setStockPrice("");
+    setStockQuantity("");
+    setStockResults(null);
+    setBinaryInput("");
+    setStartDate("");
+    setEndDate("");
+    setDaysBetweenResult("");
+    setAddDaysResult("");
+    setSubtractDaysResult("");
+    setKdvRateState("20");
+    setLoanInterest("");
+    setLoanTermInput("");
+    setTipPeople("");
+    setCostMode("fromRate");
+    setCostCurrentPrice("");
+    setCostRate("");
+    setCostIsProfit(true);
+    setCostQuantity("");
+    setCostBuyPrice("");
+    setStopajMode("fromBalanceProfit");
+    setStopajTotalBalance("");
+    setStopajProfitPortion("");
+    setStopajProfit("");
+    setStopajRate("17.5");
+    setStopajBuyAmount("");
+    setStopajSellAmount("");
+  };
+
+  const handleCategoryChange = (newCat: ToolCategory) => {
+    triggerHaptic();
+    setActiveCategory(newCat);
+
+    // Yeni kategorideki araçları hesapla
+    const toolsInCat = allToolItems.filter((tool) => {
+      if (newCat === "all") return true;
+      if (newCat === "favorites") return favoriteTools.includes(tool.id);
+      return tool.category === newCat;
+    });
+
+    // Eğer şu anki seçili araç bu kategoride yoksa, otomatik olarak bu kategorinin ilk aracını seç
+    if (toolsInCat.length > 0 && !toolsInCat.some((t) => t.id === selectedTool)) {
+      switchTool(toolsInCat[0].id);
+    }
+
+    // Yatay araç listesini en başa sıfırla
+    toolScrollRef.current?.scrollTo({ x: 0, animated: true });
+  };
+
+  const filteredTools = allToolItems.filter((tool) => {
+    if (activeCategory === "all") return true;
+    if (activeCategory === "favorites") return favoriteTools.includes(tool.id);
+    return tool.category === activeCategory;
+  });
+
+  const sortedTools = [...filteredTools].sort((a, b) => {
+    const aFav = favoriteTools.includes(a.id);
+    const bFav = favoriteTools.includes(b.id);
+    if (aFav && !bFav) return -1;
+    if (!aFav && bFav) return 1;
+    return 0;
+  });
+
+  const gridModalFilteredTools = allToolItems
+    .filter((tool) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        tool.title.toLowerCase().includes(q) ||
+        tool.subtitle.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      if (activeCategory === "all") return true;
+      if (activeCategory === "favorites") return favoriteTools.includes(tool.id);
+      return tool.category === activeCategory;
+    })
+    .sort((a, b) => {
+      const aFav = favoriteTools.includes(a.id);
+      const bFav = favoriteTools.includes(b.id);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+      return 0;
+    });
 
   const getCurrencies = () => {
     // API'den gelen para birimlerine göre filtreleme yap
@@ -2585,48 +2852,297 @@ export default function ToolsScreen() {
         padding: 20,
         paddingTop: Platform.OS === "android" ? 40 : 20,
       },
+      toolsHeaderContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 14,
+        marginTop: Platform.OS === "android" ? 5 : 0,
+        paddingHorizontal: 2,
+      },
+      toolsHeaderLeft: {
+        flex: 1,
+      },
       headerTitle: {
         color: themeColors.text,
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: "bold",
-        textAlign: "center",
-        marginVertical: 15,
       },
-      toolSelectorScroll: {
-        maxHeight: 50,
-        marginBottom: 20,
+      headerSubtitle: {
+        color: isDarkMode ? "#9CA3AF" : "#6B7280",
+        fontSize: 12,
+        marginTop: 2,
+        fontWeight: "500",
+      },
+      allToolsHeaderButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: themeColors.primary,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 14,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+        elevation: 2,
+      },
+      allToolsHeaderButtonText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "bold",
+        marginLeft: 6,
+      },
+      topFeedbackToast: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: isDarkMode ? "rgba(22, 163, 74, 0.15)" : "#DCFCE7",
+        borderColor: isDarkMode ? "rgba(22, 163, 74, 0.4)" : "#86EFAC",
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingVertical: 7,
+        paddingHorizontal: 12,
+        marginBottom: 10,
+        alignSelf: "flex-start",
+      },
+      topFeedbackToastText: {
+        color: isDarkMode ? "#4ADE80" : "#16A34A",
+        fontSize: 12,
+        fontWeight: "600",
+        marginLeft: 6,
+      },
+      categoryScrollWrapper: {
+        height: 44,
+        marginBottom: 10,
+        flexShrink: 0,
+      },
+      categoryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 2,
+        paddingRight: 16,
+        height: 44,
+      },
+      categoryChip: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        height: 34,
+        paddingHorizontal: 12,
+        borderRadius: 17,
+        backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
+      },
+      activeCategoryChip: {
+        backgroundColor: themeColors.primary,
+        borderColor: themeColors.primary,
+      },
+      categoryChipText: {
+        fontSize: 12,
+        color: themeColors.text,
+        fontWeight: "600",
+      },
+      activeCategoryChipText: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      toolSelectorScrollWrapper: {
+        height: 50,
+        marginBottom: 16,
+        flexShrink: 0,
       },
       toolSelectorRow: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 4,
+        paddingHorizontal: 2,
+        paddingRight: 16,
+        height: 50,
       },
       toolButton: {
         backgroundColor: themeColors.surface,
         borderRadius: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 18,
-        marginRight: 10,
+        height: 40,
+        paddingHorizontal: 15,
+        marginRight: 8,
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "center",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: isDarkMode ? 0.18 : 0.1,
         shadowRadius: 4,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: "transparent",
+      },
+      favoriteToolButton: {
+        borderColor: isDarkMode ? "rgba(245, 158, 11, 0.45)" : "rgba(245, 158, 11, 0.55)",
+        backgroundColor: isDarkMode ? "rgba(245, 158, 11, 0.1)" : "#FEF3C7",
       },
       selectedToolButton: {
         backgroundColor: themeColors.primary,
+        borderColor: themeColors.primary,
       },
       toolButtonText: {
         color: themeColors.text,
-        fontSize: 14,
-        fontWeight: "500",
+        fontSize: 13,
+        fontWeight: "600",
         marginLeft: 6,
       },
       selectedToolButtonText: {
         color: "#fff",
         fontWeight: "bold",
+      },
+      moreToolsPill: {
+        backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)",
+        borderRadius: 16,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        marginRight: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1.2,
+        borderColor: themeColors.primary,
+        borderStyle: "dashed",
+      },
+      moreToolsPillText: {
+        color: themeColors.primary,
+        fontSize: 12,
+        fontWeight: "bold",
+        marginLeft: 6,
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        justifyContent: "flex-end",
+      },
+      modalContent: {
+        backgroundColor: themeColors.surface,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: "86%",
+        paddingHorizontal: 16,
+        paddingTop: 18,
+        paddingBottom: Platform.OS === "ios" ? 34 : 20,
+      },
+      modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 14,
+        paddingHorizontal: 4,
+      },
+      modalTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        color: themeColors.text,
+      },
+      modalCloseButton: {
+        padding: 6,
+        borderRadius: 14,
+        backgroundColor: isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+      },
+      searchBarContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: themeColors.background,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)",
+        height: 44,
+      },
+      searchIcon: {
+        marginRight: 8,
+      },
+      searchInput: {
+        flex: 1,
+        color: themeColors.text,
+        fontSize: 14,
+        paddingVertical: 8,
+      },
+      searchClearButton: {
+        padding: 4,
+      },
+      modalCategoryScrollWrapper: {
+        height: 44,
+        marginBottom: 12,
+        flexShrink: 0,
+      },
+      modalCategoryRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 2,
+        paddingRight: 16,
+        height: 44,
+      },
+      gridContainer: {
+        paddingBottom: 60,
+      },
+      gridRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+      },
+      gridCard: {
+        width: "48%",
+        backgroundColor: isDarkMode ? "#252528" : "#F3F4F6",
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 12,
+        borderWidth: 1.5,
+        borderColor: isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: isDarkMode ? 0.2 : 0.06,
+        shadowRadius: 3,
+        elevation: 2,
+      },
+      selectedGridCard: {
+        borderColor: themeColors.primary,
+        borderWidth: 2,
+      },
+      gridCardTopRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 10,
+      },
+      gridIconContainer: {
+        width: 30,
+        height: 30,
+        justifyContent: "center",
+        alignItems: "flex-start",
+      },
+      gridFavButton: {
+        padding: 4,
+      },
+      gridCardTitle: {
+        fontSize: 15,
+        fontWeight: "bold",
+        color: themeColors.text,
+        marginBottom: 4,
+      },
+      selectedGridCardTitle: {
+        color: themeColors.primary,
+      },
+      gridCardSubtitle: {
+        fontSize: 11,
+        color: isDarkMode ? "#9CA3AF" : "#6B7280",
+        lineHeight: 15,
+      },
+      emptyContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 40,
+      },
+      emptyText: {
+        fontSize: 14,
+        color: isDarkMode ? "#9CA3AF" : "#6B7280",
+        marginTop: 10,
       },
       toolContainer: {
         backgroundColor: themeColors.surface,
@@ -3308,76 +3824,363 @@ export default function ToolsScreen() {
             { paddingBottom: 260 },
           ]}
         >
-          <Text style={styles.headerTitle}>{t("tools")}</Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.toolSelectorScroll}
-            contentContainerStyle={styles.toolSelectorRow}
+          {/* Grid & Quick Search Modal */}
+          <Modal
+            visible={isGridModalVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setIsGridModalVisible(false)}
           >
-            {tools.map((tool) => (
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              style={styles.modalOverlay}
+            >
+              <View style={styles.modalContent}>
+                {/* Modal Header */}
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <FontAwesome
+                      name="th-large"
+                      size={18}
+                      color={themeColors.primary}
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={styles.modalTitle}>{t("allTools")}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      triggerHaptic();
+                      setIsGridModalVisible(false);
+                    }}
+                    style={styles.modalCloseButton}
+                  >
+                    <FontAwesome name="times" size={18} color={themeColors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Search Input */}
+                <View style={styles.searchBarContainer}>
+                  <FontAwesome
+                    name="search"
+                    size={15}
+                    color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+                    style={styles.searchIcon}
+                  />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder={t("searchToolsPlaceholder")}
+                    placeholderTextColor={isDarkMode ? "#6B7280" : "#9CA3AF"}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    clearButtonMode="while-editing"
+                  />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => setSearchQuery("")}
+                      style={styles.searchClearButton}
+                    >
+                      <FontAwesome
+                        name="times-circle"
+                        size={16}
+                        color={isDarkMode ? "#9CA3AF" : "#6B7280"}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Category Pills Inside Modal */}
+                <View style={styles.modalCategoryScrollWrapper}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.modalCategoryRow}
+                  >
+                    {categories.map((cat) => {
+                      const isActive = activeCategory === cat.id;
+                      const count =
+                        cat.id === "all"
+                          ? allToolItems.length
+                          : cat.id === "favorites"
+                          ? favoriteTools.length
+                          : allToolItems.filter((i) => i.category === cat.id).length;
+
+                      return (
+                        <TouchableOpacity
+                          key={cat.id}
+                          style={[
+                            styles.categoryChip,
+                            isActive && styles.activeCategoryChip,
+                          ]}
+                          onPress={() => {
+                            handleCategoryChange(cat.id);
+                            modalGridScrollRef.current?.scrollTo({ y: 0, animated: true });
+                          }}
+                        >
+                          <FontAwesome
+                            name={cat.icon}
+                            size={12}
+                            color={isActive ? "#fff" : themeColors.text}
+                            style={{ marginRight: 6 }}
+                          />
+                          <Text
+                            style={[
+                              styles.categoryChipText,
+                              isActive && styles.activeCategoryChipText,
+                            ]}
+                          >
+                            {cat.title} ({count})
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
+                {/* Grid of Tools */}
+                <ScrollView
+                  ref={modalGridScrollRef}
+                  showsVerticalScrollIndicator={true}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={styles.gridContainer}
+                >
+                  {gridModalFilteredTools.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                      <FontAwesome
+                        name="search"
+                        size={36}
+                        color={isDarkMode ? "#4B5563" : "#D1D5DB"}
+                      />
+                      <Text style={styles.emptyText}>{t("noMatchingTools")}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.gridRow}>
+                      {gridModalFilteredTools.map((tool) => {
+                        const isSelected = selectedTool === tool.id;
+                        const isFavorite = favoriteTools.includes(tool.id);
+
+                        return (
+                          <TouchableOpacity
+                            key={tool.id}
+                            style={[
+                              styles.gridCard,
+                              isSelected && styles.selectedGridCard,
+                            ]}
+                            onPress={() => {
+                              switchTool(tool.id);
+                              setIsGridModalVisible(false);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            <View style={styles.gridCardTopRow}>
+                              <View style={styles.gridIconContainer}>
+                                <FontAwesome
+                                  name={tool.icon}
+                                  size={20}
+                                  color={
+                                    isSelected
+                                      ? themeColors.primary
+                                      : isDarkMode
+                                      ? "#E5E7EB"
+                                      : "#374151"
+                                  }
+                                />
+                              </View>
+                              <TouchableOpacity
+                                hitSlop={{
+                                  top: 10,
+                                  bottom: 10,
+                                  left: 10,
+                                  right: 10,
+                                }}
+                                onPress={() => toggleFavorite(tool.id)}
+                                style={styles.gridFavButton}
+                              >
+                                <FontAwesome
+                                  name={isFavorite ? "star" : "star-o"}
+                                  size={18}
+                                  color={
+                                    isFavorite
+                                      ? "#F59E0B"
+                                      : isDarkMode
+                                      ? "#6B7280"
+                                      : "#9CA3AF"
+                                  }
+                                />
+                              </TouchableOpacity>
+                            </View>
+
+                            <Text
+                              style={[
+                                styles.gridCardTitle,
+                                isSelected && styles.selectedGridCardTitle,
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {tool.title}
+                            </Text>
+                            <Text
+                              style={styles.gridCardSubtitle}
+                              numberOfLines={2}
+                            >
+                              {tool.subtitle}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </ScrollView>
+              </View>
+            </KeyboardAvoidingView>
+          </Modal>
+
+          {/* Top Header with All Tools (Grid) Button */}
+          <View style={styles.toolsHeaderContainer}>
+            <View style={styles.toolsHeaderLeft}>
+              <Text style={styles.headerTitle}>{t("tools")}</Text>
+              <Text style={styles.headerSubtitle}>
+                {allToolItems.find((tool) => tool.id === selectedTool)?.subtitle || ""}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.allToolsHeaderButton}
+              onPress={() => {
+                triggerHaptic();
+                setIsGridModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="th-large" size={13} color="#fff" />
+              <Text style={styles.allToolsHeaderButtonText}>{t("allTools")}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Toast Banner for Pin/Unpin Feedback */}
+          {copiedToast && !analysisCard && (
+            <View style={styles.topFeedbackToast}>
+              <FontAwesome
+                name="star"
+                size={13}
+                color={isDarkMode ? "#4ADE80" : "#16A34A"}
+              />
+              <Text style={styles.topFeedbackToastText}>
+                {copiedToastText || t("resultCopiedToast")}
+              </Text>
+            </View>
+          )}
+
+          {/* Category Chips Bar */}
+          <View style={styles.categoryScrollWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryRow}
+            >
+              {categories.map((cat) => {
+                const isActive = activeCategory === cat.id;
+                const count =
+                  cat.id === "all"
+                    ? allToolItems.length
+                    : cat.id === "favorites"
+                    ? favoriteTools.length
+                    : allToolItems.filter((i) => i.category === cat.id).length;
+
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.categoryChip,
+                      isActive && styles.activeCategoryChip,
+                    ]}
+                    onPress={() => {
+                      handleCategoryChange(cat.id);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <FontAwesome
+                      name={cat.icon}
+                      size={12}
+                      color={isActive ? "#fff" : themeColors.text}
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        isActive && styles.activeCategoryChipText,
+                      ]}
+                    >
+                      {cat.title} ({count})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Horizontal Tools Bar (Favorites Pinned to the Left) */}
+          <View style={styles.toolSelectorScrollWrapper}>
+            <ScrollView
+              ref={toolScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.toolSelectorRow}
+            >
+              {sortedTools.map((tool) => {
+                const isSelected = selectedTool === tool.id;
+                const isFavorite = favoriteTools.includes(tool.id);
+
+                return (
+                  <TouchableOpacity
+                    key={tool.id}
+                    style={[
+                      styles.toolButton,
+                      isSelected && styles.selectedToolButton,
+                      isFavorite && !isSelected && styles.favoriteToolButton,
+                    ]}
+                    onPress={() => switchTool(tool.id)}
+                    onLongPress={() => toggleFavorite(tool.id)}
+                    delayLongPress={350}
+                    activeOpacity={0.8}
+                  >
+                    {isFavorite && (
+                      <FontAwesome
+                        name="star"
+                        size={11}
+                        color={isSelected ? "#FFD700" : "#F59E0B"}
+                        style={{ marginRight: 5 }}
+                      />
+                    )}
+                    <FontAwesome
+                      name={tool.icon}
+                      size={15}
+                      color={isSelected ? "#fff" : themeColors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.toolButtonText,
+                        isSelected && styles.selectedToolButtonText,
+                      ]}
+                    >
+                      {tool.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Quick 'All Tools' pill at the end of scroll */}
               <TouchableOpacity
-                key={tool.id}
-                style={[
-                  styles.toolButton,
-                  selectedTool === tool.id && styles.selectedToolButton,
-                ]}
+                style={styles.moreToolsPill}
                 onPress={() => {
                   triggerHaptic();
-                  setSelectedTool(tool.id);
-                  setResult("");
-                  setAnalysisCard(null);
-                  setCopiedToast(false);
-                  setCopiedKey(null);
-                  setCopiedToastText("");
-                  setAmount("");
-                  setAmount2("");
-                  setStockName("");
-                  setStockPrice("");
-                  setStockQuantity("");
-                  setStockResults(null);
-                  setBinaryInput("");
-                  setStartDate("");
-                  setEndDate("");
-                  setDaysBetweenResult("");
-                  setAddDaysResult("");
-                  setSubtractDaysResult("");
-                  setKdvRateState("20");
-                  setLoanInterest("");
-                  setLoanTermInput("");
-                  setTipPeople("");
-                  setCostMode("fromRate");
-                  setCostCurrentPrice("");
-                  setCostRate("");
-                  setCostIsProfit(true);
-                  setCostQuantity("");
-                  setCostBuyPrice("");
-                  setStopajMode("fromBalanceProfit");
-                  setStopajTotalBalance("");
-                  setStopajProfitPortion("");
-                  setStopajProfit("");
-                  setStopajRate("17.5");
-                  setStopajBuyAmount("");
-                  setStopajSellAmount("");
+                  setIsGridModalVisible(true);
                 }}
+                activeOpacity={0.8}
               >
-                <FontAwesome
-                  name={tool.icon}
-                  size={16}
-                  color={selectedTool === tool.id ? "#fff" : themeColors.text}
-                />
-                <Text
-                  style={[
-                    styles.toolButtonText,
-                    selectedTool === tool.id && styles.selectedToolButtonText,
-                  ]}
-                >
-                  {tool.title}
-                </Text>
+                <FontAwesome name="th-large" size={12} color={themeColors.primary} />
+                <Text style={styles.moreToolsPillText}>{t("openAllTools")}</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </ScrollView>
+          </View>
 
           <View style={styles.toolContainer}>
             {renderTool()}

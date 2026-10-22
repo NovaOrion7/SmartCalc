@@ -355,6 +355,23 @@ const translations = {
     netPayoutIfSold: "Satsanız Eline Geçecek Net",
     principalAmount: "Anapara Tutarı",
     enterValidBalance: "Geçerli bir portföy bakiyesi girin",
+
+    // Araç Gezinme & Favoriler
+    allTools: "Tüm Araçlar",
+    openAllTools: "Tümünü Gör",
+    gridTools: "Tümü",
+    favorites: "Favoriler",
+    categoryAll: "Tümü",
+    categoryFinance: "Finans",
+    categoryConverter: "Çevirici",
+    categoryLife: "Yaşam",
+    searchToolsPlaceholder: "Araç veya hesaplayıcı ara...",
+    noMatchingTools: "Eşleşen araç bulunamadı",
+    longPressToPin: "Favorilere sabitlemek için basılı tutun",
+    favoriteAdded: "Favorilere eklendi",
+    favoriteRemoved: "Favorilerden çıkarıldı",
+    close: "Kapat",
+    date: "Tarih",
   },
   en: {
     // Calculator
@@ -701,6 +718,23 @@ const translations = {
     netPayoutIfSold: "Net Payout If Sold",
     principalAmount: "Principal Amount",
     enterValidBalance: "Enter a valid portfolio balance",
+
+    // Tools Navigation & Favorites
+    allTools: "All Tools",
+    openAllTools: "View All",
+    gridTools: "All",
+    favorites: "Favorites",
+    categoryAll: "All",
+    categoryFinance: "Finance",
+    categoryConverter: "Converter",
+    categoryLife: "Life",
+    searchToolsPlaceholder: "Search tool or calculator...",
+    noMatchingTools: "No matching tools found",
+    longPressToPin: "Hold to pin to favorites",
+    favoriteAdded: "Added to favorites",
+    favoriteRemoved: "Removed from favorites",
+    close: "Close",
+    date: "Date",
   },
 };
 
