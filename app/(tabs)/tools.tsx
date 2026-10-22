@@ -1,9 +1,11 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+import { setStringAsync } from "expo-clipboard";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
     ActivityIndicator,
+    KeyboardAvoidingView,
     Platform,
     SafeAreaView,
     ScrollView,
@@ -23,6 +25,8 @@ export default function ToolsScreen() {
     t,
     language,
     getThemeColors,
+    currency,
+    setCurrency,
   } = useSettings();
   const themeColors = getThemeColors();
   const navigation = useNavigation();
@@ -71,12 +75,51 @@ export default function ToolsScreen() {
   const [loanTermInput, setLoanTermInput] = useState("");
   const [tipPeople, setTipPeople] = useState("");
 
+  // Alış maliyeti hesaplayıcı için
+  const [costMode, setCostMode] = useState<"fromRate" | "fromPrices">("fromRate");
+  const [costCurrentPrice, setCostCurrentPrice] = useState("");
+  const [costRate, setCostRate] = useState("");
+  const [costIsProfit, setCostIsProfit] = useState(true);
+  const [costQuantity, setCostQuantity] = useState("");
+  const [costBuyPrice, setCostBuyPrice] = useState("");
+
+  // Stopaj hesaplayıcı için (3 modlu)
+  const [stopajMode, setStopajMode] = useState<
+    "fromBalanceProfit" | "fromProfit" | "fromBuySell"
+  >("fromBalanceProfit");
+  const [stopajTotalBalance, setStopajTotalBalance] = useState("");
+  const [stopajProfitPortion, setStopajProfitPortion] = useState("");
+  const [stopajProfit, setStopajProfit] = useState("");
+  const [stopajRate, setStopajRate] = useState("17.5");
+  const [stopajBuyAmount, setStopajBuyAmount] = useState("");
+  const [stopajSellAmount, setStopajSellAmount] = useState("");
+
+  // Sonuç kartı ve kopyalama
+  const [analysisCard, setAnalysisCard] = useState<{
+    title: string;
+    heroLabel: string;
+    heroValue: string;
+    subHero?: string;
+    rows: {
+      label: string;
+      value: string;
+      isProfit?: boolean;
+      isLoss?: boolean;
+    }[];
+    rawText: string;
+  } | null>(null);
+  const [copiedToast, setCopiedToast] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [copiedToastText, setCopiedToastText] = useState("");
+
   const tools = [
     { id: "currency", title: t("currency"), icon: "money" as const },
     { id: "unit", title: t("unit"), icon: "arrows-h" as const },
     { id: "bmi", title: t("bmi"), icon: "heart" as const },
     { id: "discount", title: t("discount"), icon: "percent" as const },
     { id: "stock", title: t("stock"), icon: "line-chart" as const },
+    { id: "cost", title: t("cost"), icon: "tags" as const },
+    { id: "stopaj", title: t("stopaj"), icon: "pie-chart" as const },
     { id: "binary", title: t("binary"), icon: "code" as const },
     { id: "base", title: t("base"), icon: "calculator" as const },
     { id: "date", title: t("dateCalculator"), icon: "calendar" as const },
@@ -145,9 +188,18 @@ export default function ToolsScreen() {
   const fetchExchangeRates = async () => {
     try {
       setLoading(true);
-      // Frankfurter API kullanıyoruz - Avrupa Merkez Bankası verilerini kullanır
-      const response = await fetch("https://api.frankfurter.app/latest");
+      let response = await fetch("https://api.frankfurter.dev/v1/latest");
+      if (!response.ok) {
+        response = await fetch("https://api.frankfurter.app/latest");
+      }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+
+      if (!data || !data.rates || !data.rates.USD) {
+        throw new Error("Invalid response format");
+      }
 
       // Frankfurter EUR bazlı kur veriyor, USD bazlı yapmak için dönüştürüyoruz
       const eurToUsd = 1 / data.rates.USD;
@@ -501,7 +553,7 @@ export default function ToolsScreen() {
             <View style={styles.stockCurrentItem}>
               <Text style={styles.stockCurrentLabel}>{t("price")}</Text>
               <Text style={styles.stockCurrentValue}>
-                {formatNumber(stockData.price)} TL
+                {formatNumber(stockData.price)} {currency}
               </Text>
             </View>
             <View style={styles.stockCurrentItem}>
@@ -513,7 +565,7 @@ export default function ToolsScreen() {
             <View style={styles.stockCurrentItem}>
               <Text style={styles.stockCurrentLabel}>{t("capital")}</Text>
               <Text style={styles.stockCurrentValue}>
-                {formatNumber(stockData.capital)} TL
+                {formatNumber(stockData.capital)} {currency}
               </Text>
             </View>
           </View>
@@ -539,7 +591,7 @@ export default function ToolsScreen() {
                 <View style={styles.stockLevelContent}>
                   <View style={styles.stockLevelPrice}>
                     <Text style={styles.stockLevelPriceText}>
-                      {formatNumber(level.price)} TL
+                      {formatNumber(level.price)} {currency}
                     </Text>
                     <Text style={styles.stockLevelPriceSubtext}>
                       {t("price")}
@@ -552,7 +604,7 @@ export default function ToolsScreen() {
                         { color: "#22C55E" },
                       ]}
                     >
-                      +{formatNumber(level.profit)} TL
+                      +{formatNumber(level.profit)} {currency}
                     </Text>
                     <Text
                       style={[
@@ -589,7 +641,7 @@ export default function ToolsScreen() {
                 <View style={styles.stockLevelContent}>
                   <View style={styles.stockLevelPrice}>
                     <Text style={styles.stockLevelPriceText}>
-                      {formatNumber(level.price)} TL
+                      {formatNumber(level.price)} {currency}
                     </Text>
                     <Text style={styles.stockLevelPriceSubtext}>
                       {t("price")}
@@ -602,7 +654,7 @@ export default function ToolsScreen() {
                         { color: "#EF4444" },
                       ]}
                     >
-                      -{formatNumber(level.loss)} TL
+                      -{formatNumber(level.loss)} {currency}
                     </Text>
                     <Text
                       style={[
@@ -667,7 +719,7 @@ export default function ToolsScreen() {
     }
 
     setStockResults({
-      stockName: stockName || "STOCK",
+      stockName: stockName.trim().toUpperCase() || (language === "tr" ? "HİSSE" : "STOCK"),
       price,
       quantity,
       capital,
@@ -902,6 +954,584 @@ export default function ToolsScreen() {
 
     setResult(resultText);
     triggerHaptic();
+  };
+
+  const cleanNumericValue = (val: string): string => {
+    if (!val) return "";
+    // Eğer çok satırlı bir metinse (tüm özet vb.), olduğu gibi bırak
+    if (val.includes("\n")) return val;
+
+    let s = val.trim();
+
+    // 1. Seçili para birimini (TRY, USD vb.) temizle
+    if (currency) {
+      s = s.split(currency).join(" ");
+    }
+
+    // 2. Ekstra yüzde getiri parantezlerini temizle: örn. (+%1,55) veya (-%10)
+    s = s.replace(/\([+-]?%?[-\d.,]+\)/g, "");
+
+    // 3. Tüm para birimi kodlarını temizle (TRY, USD, EUR, GBP, TL vb.)
+    s = s.replace(
+      /\b(TRY|USD|EUR|GBP|TL|JPY|CAD|AUD|CHF|SEK|NOK|DKK|PLN|CZK|HUF|CNY|INR|KRW|SGD|HKD|MXN|BRL|ZAR|NZD|ILS|THB|MYR|PHP|IDR)\b/gi,
+      "",
+    );
+
+    // 4. Para birimi sembollerini temizle
+    s = s.replace(/[₺$€£¥₹₽₩]/g, "");
+
+    // 5. Pozitif + ve % işaretlerini temizle
+    s = s.replace(/[%+]/g, "").trim();
+
+    // 6. Sayıyı (varsa eksi işaretini ve basamak ayıraçlarını koruyarak) bul
+    const match = s.match(/-?[\d.,]+/);
+    if (match) {
+      return match[0].replace(/[.,]$/, "").trim();
+    }
+
+    return s.trim();
+  };
+
+  const handleCopy = async (
+    customText?: string,
+    key: string = "result",
+    toastLabel?: string,
+  ) => {
+    const rawTarget =
+      customText !== undefined
+        ? customText
+        : (analysisCard?.heroValue || result);
+    if (!rawTarget) return;
+
+    // Eğer tüm özet (summary) veya düz sonuç değilse para birimini ayıkla, YALNIZCA sayıyı kopyala
+    const textToCopy =
+      key === "summary" || key === "plain"
+        ? rawTarget
+        : cleanNumericValue(rawTarget);
+
+    await setStringAsync(textToCopy);
+    triggerHaptic();
+    setCopiedKey(key);
+    setCopiedToast(true);
+    setCopiedToastText(toastLabel || `${t("copied")}: ${textToCopy}`);
+    setTimeout(() => {
+      setCopiedToast(false);
+      setCopiedKey(null);
+    }, 2000);
+  };
+
+  const calculateCost = () => {
+    if (costMode === "fromRate") {
+      const currentPriceNum = parseFloat(costCurrentPrice.replace(",", "."));
+      const rateNum = parseFloat(costRate.replace(",", "."));
+      const qtyNum = parseFloat(costQuantity.replace(",", "."));
+
+      if (isNaN(currentPriceNum) || currentPriceNum <= 0) {
+        setResult(t("enterValidPrice"));
+        setAnalysisCard(null);
+        return;
+      }
+      if (isNaN(rateNum) || rateNum < 0) {
+        setResult(t("enterValidRate"));
+        setAnalysisCard(null);
+        return;
+      }
+      if (!costIsProfit && rateNum >= 100) {
+        setResult(t("rateCannotExceed100"));
+        setAnalysisCard(null);
+        return;
+      }
+
+      const costPrice = costIsProfit
+        ? currentPriceNum / (1 + rateNum / 100)
+        : currentPriceNum / (1 - rateNum / 100);
+
+      const unitDiff = currentPriceNum - costPrice;
+      const hasQty = !isNaN(qtyNum) && qtyNum > 0;
+
+      const rows: { label: string; value: string; isProfit?: boolean; isLoss?: boolean }[] = [
+        {
+          label: `🏷️ ${t("unitCostPrice")}`,
+          value: `${formatNumber(costPrice)} ${currency}`,
+        },
+        {
+          label: `💲 ${t("currentPrice")}`,
+          value: `${formatNumber(currentPriceNum)} ${currency}`,
+        },
+        {
+          label: `📊 ${t("profitLossRate")}`,
+          value: `${costIsProfit ? "+" : "-"}%${formatNumber(rateNum)}`,
+          isProfit: costIsProfit,
+          isLoss: !costIsProfit,
+        },
+        {
+          label: costIsProfit ? `🟢 ${t("unitProfit")}` : `🔴 ${t("unitLoss")}`,
+          value: `${costIsProfit ? "+" : "-"}${formatNumber(Math.abs(unitDiff))} ${currency}`,
+          isProfit: costIsProfit,
+          isLoss: !costIsProfit,
+        },
+      ];
+
+      let rawText = `🎯 ${t("costCalculator").toUpperCase()}\n\n`;
+      rawText += `🏷️ ${t("unitCostPrice")}: ${formatNumber(costPrice)} ${currency}\n\n`;
+      rawText += `💲 ${t("currentPrice")}: ${formatNumber(currentPriceNum)} ${currency}\n\n`;
+      rawText += `📊 ${t("profitLossRate")}: ${costIsProfit ? "+" : "-"}%${formatNumber(rateNum)}\n\n`;
+      rawText += costIsProfit
+        ? `🟢 ${t("unitProfit")}: +${formatNumber(unitDiff)} ${currency}\n\n`
+        : `🔴 ${t("unitLoss")}: -${formatNumber(Math.abs(unitDiff))} ${currency}\n\n`;
+
+      if (hasQty) {
+        const totalCostVal = costPrice * qtyNum;
+        const totalCurrentVal = currentPriceNum * qtyNum;
+        const totalDiffVal = totalCurrentVal - totalCostVal;
+
+        rows.push(
+          { label: `📦 ${t("quantity")}`, value: formatNumber(qtyNum) },
+          {
+            label: `💼 ${t("totalInvestment")}`,
+            value: `${formatNumber(totalCostVal)} ${currency}`,
+          },
+          {
+            label: `💰 ${t("currentTotalValue")}`,
+            value: `${formatNumber(totalCurrentVal)} ${currency}`,
+          },
+          {
+            label: costIsProfit ? `📈 ${t("totalProfit")}` : `📉 ${t("totalLoss")}`,
+            value: `${costIsProfit ? "+" : "-"}${formatNumber(Math.abs(totalDiffVal))} ${currency}`,
+            isProfit: costIsProfit,
+            isLoss: !costIsProfit,
+          },
+        );
+
+        rawText += `📦 ${t("quantity")}: ${formatNumber(qtyNum)}\n\n`;
+        rawText += `💼 ${t("totalInvestment")}: ${formatNumber(totalCostVal)} ${currency}\n\n`;
+        rawText += `💰 ${t("currentTotalValue")}: ${formatNumber(totalCurrentVal)} ${currency}\n\n`;
+        rawText += costIsProfit
+          ? `📈 ${t("totalProfit")}: +${formatNumber(totalDiffVal)} ${currency}`
+          : `📉 ${t("totalLoss")}: -${formatNumber(Math.abs(totalDiffVal))} ${currency}`;
+      }
+
+      setAnalysisCard({
+        title: `🎯 ${t("costCalculator")}`,
+        heroLabel: t("unitCostPrice"),
+        heroValue: `${formatNumber(costPrice)} ${currency}`,
+        subHero: costIsProfit
+          ? `+${formatNumber(unitDiff)} ${currency} (+%${formatNumber(rateNum)})`
+          : `-${formatNumber(Math.abs(unitDiff))} ${currency} (-%${formatNumber(rateNum)})`,
+        rows,
+        rawText,
+      });
+
+      setResult(rawText);
+      triggerHaptic();
+    } else {
+      // fromPrices
+      const buyPriceNum = parseFloat(costBuyPrice.replace(",", "."));
+      const currentPriceNum = parseFloat(costCurrentPrice.replace(",", "."));
+      const qtyNum = parseFloat(costQuantity.replace(",", "."));
+
+      if (isNaN(buyPriceNum) || buyPriceNum <= 0) {
+        setResult(t("enterValidPrice"));
+        setAnalysisCard(null);
+        return;
+      }
+      if (isNaN(currentPriceNum) || currentPriceNum <= 0) {
+        setResult(t("enterValidPrice"));
+        setAnalysisCard(null);
+        return;
+      }
+
+      const unitDiff = currentPriceNum - buyPriceNum;
+      const rateNum = ((currentPriceNum - buyPriceNum) / buyPriceNum) * 100;
+      const isProfitable = unitDiff > 0;
+      const isLoss = unitDiff < 0;
+      const hasQty = !isNaN(qtyNum) && qtyNum > 0;
+
+      const rows: { label: string; value: string; isProfit?: boolean; isLoss?: boolean }[] = [
+        {
+          label: `🏷️ ${t("buyPrice")}`,
+          value: `${formatNumber(buyPriceNum)} ${currency}`,
+        },
+        {
+          label: `💲 ${t("currentPrice")}`,
+          value: `${formatNumber(currentPriceNum)} ${currency}`,
+        },
+        {
+          label: `📊 ${t("profitLossRate")}`,
+          value: isProfitable
+            ? `+ %${formatNumber(rateNum)}`
+            : isLoss
+              ? `- %${formatNumber(Math.abs(rateNum))}`
+              : "%0",
+          isProfit: isProfitable,
+          isLoss,
+        },
+        {
+          label: isProfitable ? `🟢 ${t("unitProfit")}` : `🔴 ${t("unitLoss")}`,
+          value: isProfitable
+            ? `+${formatNumber(unitDiff)} ${currency}`
+            : isLoss
+              ? `-${formatNumber(Math.abs(unitDiff))} ${currency}`
+              : `0 ${currency}`,
+          isProfit: isProfitable,
+          isLoss,
+        },
+      ];
+
+      let rawText = `📊 ${t("costCalculator").toUpperCase()}\n\n`;
+      rawText += `🏷️ ${t("buyPrice")}: ${formatNumber(buyPriceNum)} ${currency}\n\n`;
+      rawText += `💲 ${t("currentPrice")}: ${formatNumber(currentPriceNum)} ${currency}\n\n`;
+      rawText += isProfitable
+        ? `🟢 ${t("statusInProfit")}: +%${formatNumber(rateNum)}\n\n`
+        : isLoss
+          ? `🔴 ${t("statusInLoss")}: -%${formatNumber(Math.abs(rateNum))}\n\n`
+          : `⚪ ${t("statusBreakEven")}: %0\n\n`;
+
+      if (hasQty) {
+        const totalCostVal = buyPriceNum * qtyNum;
+        const totalCurrentVal = currentPriceNum * qtyNum;
+        const totalDiffVal = totalCurrentVal - totalCostVal;
+
+        rows.push(
+          { label: `📦 ${t("quantity")}`, value: formatNumber(qtyNum) },
+          {
+            label: `💼 ${t("totalInvestment")}`,
+            value: `${formatNumber(totalCostVal)} ${currency}`,
+          },
+          {
+            label: `💰 ${t("currentTotalValue")}`,
+            value: `${formatNumber(totalCurrentVal)} ${currency}`,
+          },
+          {
+            label: totalDiffVal > 0 ? `📈 ${t("totalProfit")}` : `📉 ${t("totalLoss")}`,
+            value: `${totalDiffVal >= 0 ? "+" : "-"}${formatNumber(Math.abs(totalDiffVal))} ${currency}`,
+            isProfit: totalDiffVal > 0,
+            isLoss: totalDiffVal < 0,
+          },
+        );
+
+        rawText += `📦 ${t("quantity")}: ${formatNumber(qtyNum)}\n\n`;
+        rawText += `💼 ${t("totalInvestment")}: ${formatNumber(totalCostVal)} ${currency}\n\n`;
+        rawText += `💰 ${t("currentTotalValue")}: ${formatNumber(totalCurrentVal)} ${currency}\n\n`;
+        rawText += totalDiffVal >= 0
+          ? `📈 ${t("totalProfit")}: +${formatNumber(totalDiffVal)} ${currency}`
+          : `📉 ${t("totalLoss")}: -${formatNumber(Math.abs(totalDiffVal))} ${currency}`;
+      }
+
+      setAnalysisCard({
+        title: `📊 ${t("costCalculator")}`,
+        heroLabel: isProfitable ? t("statusInProfit") : isLoss ? t("statusInLoss") : t("statusBreakEven"),
+        heroValue: isProfitable
+          ? `+%${formatNumber(rateNum)}`
+          : isLoss
+            ? `-%${formatNumber(Math.abs(rateNum))}`
+            : "%0",
+        subHero: isProfitable
+          ? `+${formatNumber(unitDiff)} ${currency} (${t("unitProfit")})`
+          : isLoss
+            ? `-${formatNumber(Math.abs(unitDiff))} ${currency} (${t("unitLoss")})`
+            : undefined,
+        rows,
+        rawText,
+      });
+
+      setResult(rawText);
+      triggerHaptic();
+    }
+  };
+
+  const calculateStopaj = () => {
+    const rateNum = parseFloat(stopajRate.replace(",", "."));
+    if (isNaN(rateNum) || rateNum < 0 || rateNum > 100) {
+      setResult(t("enterValidRate"));
+      setAnalysisCard(null);
+      return;
+    }
+
+    if (stopajMode === "fromBalanceProfit") {
+      const totalVal = parseFloat(stopajTotalBalance.replace(",", "."));
+      const profitVal = parseFloat(stopajProfitPortion.replace(",", "."));
+
+      if (isNaN(totalVal) || totalVal <= 0) {
+        setResult(t("enterValidBalance"));
+        setAnalysisCard(null);
+        return;
+      }
+      if (isNaN(profitVal) || profitVal < 0) {
+        setResult(t("enterValidProfit"));
+        setAnalysisCard(null);
+        return;
+      }
+      if (profitVal > totalVal) {
+        setResult(
+          language === "tr"
+            ? "Kâr tutarı toplam portföy tutarından büyük olamaz"
+            : "Profit amount cannot exceed total balance",
+        );
+        setAnalysisCard(null);
+        return;
+      }
+
+      const taxAmount = profitVal * (rateNum / 100);
+      const netProfitVal = profitVal - taxAmount;
+      const netPayoutVal = totalVal - taxAmount;
+      const principalVal = totalVal - profitVal;
+      const netReturn = principalVal > 0 ? (netProfitVal / principalVal) * 100 : 0;
+
+      const rows = [
+        {
+          label: `💼 ${t("totalPortfolioValue")}`,
+          value: `${formatNumber(totalVal)} ${currency}`,
+        },
+        {
+          label: `📈 ${t("profitPortion")}`,
+          value: `+${formatNumber(profitVal)} ${currency}`,
+          isProfit: true,
+        },
+        {
+          label: `🏦 ${t("principalAmount")}`,
+          value: `${formatNumber(principalVal)} ${currency}`,
+        },
+        {
+          label: `✂️ ${t("stopajRate")}`,
+          value: `%${formatNumber(rateNum)}`,
+        },
+        {
+          label: `🏛️ ${t("stopajAmount")}`,
+          value: `-${formatNumber(taxAmount)} ${currency}`,
+          isLoss: true,
+        },
+        {
+          label: `💰 ${t("netProfit")}`,
+          value: `+${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})`,
+          isProfit: true,
+        },
+      ];
+
+      let rawText = `🏛️ ${t("stopajCalculator").toUpperCase()}\n\n`;
+      rawText += `💼 ${t("totalPortfolioValue")}: ${formatNumber(totalVal)} ${currency}\n\n`;
+      rawText += `📈 ${t("profitPortion")}: +${formatNumber(profitVal)} ${currency}\n\n`;
+      rawText += `🏦 ${t("principalAmount")}: ${formatNumber(principalVal)} ${currency}\n\n`;
+      rawText += `✂️ ${t("stopajRate")}: %${formatNumber(rateNum)}\n\n`;
+      rawText += `🏛️ ${t("stopajAmount")}: -${formatNumber(taxAmount)} ${currency}\n\n`;
+      rawText += `💰 ${t("netProfit")}: +${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})\n\n`;
+      rawText += `------------------------------------\n\n`;
+      rawText += `💳 ${t("netPayoutIfSold")}: ${formatNumber(netPayoutVal)} ${currency}`;
+
+      setAnalysisCard({
+        title: `🏛️ ${t("stopajCalculator")}`,
+        heroLabel: t("netPayoutIfSold"),
+        heroValue: `${formatNumber(netPayoutVal)} ${currency}`,
+        subHero: `${t("netProfit")}: +${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})`,
+        rows,
+        rawText,
+      });
+
+      setResult(rawText);
+      triggerHaptic();
+    } else if (stopajMode === "fromProfit") {
+      const profitNum = parseFloat(stopajProfit.replace(",", "."));
+      if (isNaN(profitNum) || profitNum <= 0) {
+        setResult(t("enterValidProfit"));
+        setAnalysisCard(null);
+        return;
+      }
+
+      const taxAmount = profitNum * (rateNum / 100);
+      const netProfitVal = profitNum - taxAmount;
+
+      const rows = [
+        {
+          label: `💵 ${t("grossProfit")}`,
+          value: `${formatNumber(profitNum)} ${currency}`,
+        },
+        {
+          label: `✂️ ${t("stopajRate")}`,
+          value: `%${formatNumber(rateNum)}`,
+        },
+        {
+          label: `🏛️ ${t("stopajAmount")}`,
+          value: `-${formatNumber(taxAmount)} ${currency}`,
+          isLoss: true,
+        },
+      ];
+
+      let rawText = `🏛️ ${t("stopajCalculator").toUpperCase()}\n\n`;
+      rawText += `💵 ${t("grossProfit")}: ${formatNumber(profitNum)} ${currency}\n\n`;
+      rawText += `✂️ ${t("stopajRate")}: %${formatNumber(rateNum)}\n\n`;
+      rawText += `🏛️ ${t("stopajAmount")}: -${formatNumber(taxAmount)} ${currency}\n\n`;
+      rawText += `------------------------------------\n\n`;
+      rawText += `💰 ${t("netProfit")}: ${formatNumber(netProfitVal)} ${currency}`;
+
+      setAnalysisCard({
+        title: `🏛️ ${t("stopajCalculator")}`,
+        heroLabel: t("netProfit"),
+        heroValue: `${formatNumber(netProfitVal)} ${currency}`,
+        subHero: `${t("stopajAmount")}: -${formatNumber(taxAmount)} ${currency} (%${formatNumber(rateNum)})`,
+        rows,
+        rawText,
+      });
+
+      setResult(rawText);
+      triggerHaptic();
+    } else {
+      // fromBuySell
+      const buyNum = parseFloat(stopajBuyAmount.replace(",", "."));
+      const sellNum = parseFloat(stopajSellAmount.replace(",", "."));
+
+      if (isNaN(buyNum) || buyNum <= 0 || isNaN(sellNum) || sellNum < 0) {
+        setResult(t("enterValidAmount"));
+        setAnalysisCard(null);
+        return;
+      }
+
+      const grossProfit = sellNum - buyNum;
+      const isProfitable = grossProfit > 0;
+
+      let rawText = `🏛️ ${t("stopajCalculator").toUpperCase()}\n\n`;
+      rawText += `💼 ${t("principalOrBuyAmount")}: ${formatNumber(buyNum)} ${currency}\n\n`;
+      rawText += `💲 ${t("saleOrTotalAmount")}: ${formatNumber(sellNum)} ${currency}\n\n`;
+
+      const rows: {
+        label: string;
+        value: string;
+        isProfit?: boolean;
+        isLoss?: boolean;
+      }[] = [
+        {
+          label: `💼 ${t("principalOrBuyAmount")}`,
+          value: `${formatNumber(buyNum)} ${currency}`,
+        },
+        {
+          label: `💲 ${t("saleOrTotalAmount")}`,
+          value: `${formatNumber(sellNum)} ${currency}`,
+        },
+      ];
+
+      if (isProfitable) {
+        const grossReturn = (grossProfit / buyNum) * 100;
+        const taxAmount = grossProfit * (rateNum / 100);
+        const netProfitVal = grossProfit - taxAmount;
+        const netPayoutVal = buyNum + netProfitVal;
+        const netReturn = (netProfitVal / buyNum) * 100;
+
+        rows.push(
+          {
+            label: `📈 ${t("grossProfit")}`,
+            value: `+${formatNumber(grossProfit)} ${currency} (+%${formatNumber(grossReturn)})`,
+            isProfit: true,
+          },
+          {
+            label: `✂️ ${t("stopajRate")}`,
+            value: `%${formatNumber(rateNum)}`,
+          },
+          {
+            label: `🏛️ ${t("stopajAmount")}`,
+            value: `-${formatNumber(taxAmount)} ${currency}`,
+            isLoss: true,
+          },
+          {
+            label: `💰 ${t("netProfit")}`,
+            value: `+${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})`,
+            isProfit: true,
+          },
+        );
+
+        rawText += `📈 ${t("grossProfit")}: +${formatNumber(grossProfit)} ${currency} (+%${formatNumber(grossReturn)})\n\n`;
+        rawText += `✂️ ${t("stopajRate")}: %${formatNumber(rateNum)}\n\n`;
+        rawText += `🏛️ ${t("stopajAmount")}: -${formatNumber(taxAmount)} ${currency}\n\n`;
+        rawText += `💰 ${t("netProfit")}: +${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})\n\n`;
+        rawText += `------------------------------------\n\n`;
+        rawText += `💳 ${t("netTotalPayout")}: ${formatNumber(netPayoutVal)} ${currency}`;
+
+        setAnalysisCard({
+          title: `🏛️ ${t("stopajCalculator")}`,
+          heroLabel: t("netTotalPayout"),
+          heroValue: `${formatNumber(netPayoutVal)} ${currency}`,
+          subHero: `${t("netProfit")}: +${formatNumber(netProfitVal)} ${currency} (+%${formatNumber(netReturn)})`,
+          rows,
+          rawText,
+        });
+      } else {
+        const lossVal = Math.abs(grossProfit);
+        const lossReturn = (lossVal / buyNum) * 100;
+
+        rows.push(
+          {
+            label: `📉 ${t("totalLoss")}`,
+            value: `-${formatNumber(lossVal)} ${currency} (-%${formatNumber(lossReturn)})`,
+            isLoss: true,
+          },
+          {
+            label: `ℹ️ ${t("noStopajOnLoss")}`,
+            value: `0 ${currency}`,
+          },
+        );
+
+        rawText += `📉 ${t("totalLoss")}: -${formatNumber(lossVal)} ${currency} (-%${formatNumber(lossReturn)})\n\n`;
+        rawText += `ℹ️ ${t("noStopajOnLoss")}\n\n`;
+        rawText += `🏛️ ${t("stopajAmount")}: 0 ${currency}\n\n`;
+        rawText += `------------------------------------\n\n`;
+        rawText += `💳 ${t("netTotalPayout")}: ${formatNumber(sellNum)} ${currency}`;
+
+        setAnalysisCard({
+          title: `🏛️ ${t("stopajCalculator")}`,
+          heroLabel: t("netTotalPayout"),
+          heroValue: `${formatNumber(sellNum)} ${currency}`,
+          subHero: `-${formatNumber(lossVal)} ${currency} (-%${formatNumber(lossReturn)})`,
+          rows,
+          rawText,
+        });
+      }
+
+      setResult(rawText);
+      triggerHaptic();
+    }
+  };
+
+  const renderCurrencySelector = () => {
+    const popularCurrencies = [
+      { code: "USD", label: "USD ($)" },
+      { code: "EUR", label: "EUR (€)" },
+      { code: "TRY", label: "TRY (₺)" },
+      { code: "GBP", label: "GBP (£)" },
+    ];
+
+    return (
+      <View style={styles.currencyBar}>
+        <Text style={styles.currencyBarLabel}>💱 {t("selectedCurrency")}:</Text>
+        <View style={styles.currencyChips}>
+          {popularCurrencies.map((c) => {
+            const isSelected = currency === c.code;
+            return (
+              <TouchableOpacity
+                key={c.code}
+                style={[
+                  styles.currencyChip,
+                  isSelected && {
+                    backgroundColor: themeColors.primary,
+                    borderColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setCurrency(c.code);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.currencyChipText,
+                    isSelected && styles.currencyChipTextActive,
+                  ]}
+                >
+                  {c.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
   };
 
   const renderTool = () => {
@@ -1209,11 +1839,13 @@ export default function ToolsScreen() {
               placeholder={`${t("stockName")} (${language === "tr" ? "İsteğe bağlı" : "Optional"})`}
               placeholderTextColor={themeColors.textSecondary}
               value={stockName}
-              onChangeText={setStockName}
+              onChangeText={(text) => setStockName(text.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
             />
             <TextInput
               style={styles.input}
-              placeholder={`${t("stockPrice")} (TL)`}
+              placeholder={`${t("stockPrice")} (${currency})`}
               placeholderTextColor={themeColors.textSecondary}
               value={stockPrice}
               onChangeText={setStockPrice}
@@ -1535,6 +2167,405 @@ export default function ToolsScreen() {
             />
             <TouchableOpacity style={styles.button} onPress={calculateAge}>
               <Text style={styles.buttonText}>🎂 {t("calculate")}</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      case "cost":
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t("costCalculator")}</Text>
+
+            {/* Quick Currency Selector */}
+            {renderCurrencySelector()}
+
+            {/* Mode Selector */}
+            <View style={styles.segmentedContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.segmentedTab,
+                  costMode === "fromRate" && {
+                    backgroundColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setCostMode("fromRate");
+                  setResult("");
+                  setAnalysisCard(null);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.segmentedTabText,
+                    costMode === "fromRate" && styles.segmentedTabTextActive,
+                  ]}
+                >
+                  {t("costModeRate")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segmentedTab,
+                  costMode === "fromPrices" && {
+                    backgroundColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setCostMode("fromPrices");
+                  setResult("");
+                  setAnalysisCard(null);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.segmentedTabText,
+                    costMode === "fromPrices" && styles.segmentedTabTextActive,
+                  ]}
+                >
+                  {t("costModePrices")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {costMode === "fromRate" ? (
+              <View>
+                <Text style={styles.inputLabel}>
+                  {t("currentPrice")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 54.50`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costCurrentPrice}
+                  onChangeText={setCostCurrentPrice}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>{t("profitLossRate")}:</Text>
+                <View style={styles.toggleRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleButton,
+                      {
+                        backgroundColor: costIsProfit
+                          ? "#16A34A"
+                          : themeColors.background,
+                        borderColor: costIsProfit
+                          ? "#16A34A"
+                          : themeColors.secondary,
+                      },
+                    ]}
+                    onPress={() => {
+                      setCostIsProfit(true);
+                      triggerHaptic();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleButtonText,
+                        { color: costIsProfit ? "#fff" : themeColors.text },
+                      ]}
+                    >
+                      + {t("isProfit")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleButton,
+                      {
+                        backgroundColor: !costIsProfit
+                          ? "#DC2626"
+                          : themeColors.background,
+                        borderColor: !costIsProfit
+                          ? "#DC2626"
+                          : themeColors.secondary,
+                      },
+                    ]}
+                    onPress={() => {
+                      setCostIsProfit(false);
+                      triggerHaptic();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.toggleButtonText,
+                        { color: !costIsProfit ? "#fff" : themeColors.text },
+                      ]}
+                    >
+                      - {t("isLoss")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder={
+                    costIsProfit
+                      ? `${t("placeholderEg")} 25 (%25 ${t("isProfit")})`
+                      : `${t("placeholderEg")} 10 (%10 ${t("isLoss")})`
+                  }
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costRate}
+                  onChangeText={setCostRate}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>
+                  {t("stockQuantityOptional")}:
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 1000`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costQuantity}
+                  onChangeText={setCostQuantity}
+                  keyboardType="numeric"
+                />
+
+                <TouchableOpacity style={styles.button} onPress={calculateCost}>
+                  <Text style={styles.buttonText}>🏷️ {t("calculate")}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.inputLabel}>
+                  {t("buyPrice")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 43.60`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costBuyPrice}
+                  onChangeText={setCostBuyPrice}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>
+                  {t("currentPrice")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 54.50`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costCurrentPrice}
+                  onChangeText={setCostCurrentPrice}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>
+                  {t("stockQuantityOptional")}:
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 1000`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={costQuantity}
+                  onChangeText={setCostQuantity}
+                  keyboardType="numeric"
+                />
+
+                <TouchableOpacity style={styles.button} onPress={calculateCost}>
+                  <Text style={styles.buttonText}>📊 {t("calculate")}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        );
+      case "stopaj":
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>{t("stopajCalculator")}</Text>
+
+            {/* Quick Currency Selector */}
+            {renderCurrencySelector()}
+
+            {/* Mode Selector (3 Modes) */}
+            <View style={styles.segmentedContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.segmentedTab,
+                  stopajMode === "fromBalanceProfit" && {
+                    backgroundColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setStopajMode("fromBalanceProfit");
+                  setResult("");
+                  setAnalysisCard(null);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.segmentedTabText,
+                    stopajMode === "fromBalanceProfit" &&
+                      styles.segmentedTabTextActive,
+                  ]}
+                >
+                  {t("stopajModeBalanceProfit")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segmentedTab,
+                  stopajMode === "fromProfit" && {
+                    backgroundColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setStopajMode("fromProfit");
+                  setResult("");
+                  setAnalysisCard(null);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.segmentedTabText,
+                    stopajMode === "fromProfit" &&
+                      styles.segmentedTabTextActive,
+                  ]}
+                >
+                  {t("stopajModeProfit")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.segmentedTab,
+                  stopajMode === "fromBuySell" && {
+                    backgroundColor: themeColors.primary,
+                  },
+                ]}
+                onPress={() => {
+                  setStopajMode("fromBuySell");
+                  setResult("");
+                  setAnalysisCard(null);
+                  triggerHaptic();
+                }}
+              >
+                <Text
+                  style={[
+                    styles.segmentedTabText,
+                    stopajMode === "fromBuySell" &&
+                      styles.segmentedTabTextActive,
+                  ]}
+                >
+                  {t("stopajModeBuySell")}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {stopajMode === "fromBalanceProfit" ? (
+              <View>
+                <Text style={styles.inputLabel}>
+                  {t("totalPortfolioValue")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 4600`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={stopajTotalBalance}
+                  onChangeText={setStopajTotalBalance}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>
+                  {t("profitPortion")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 85`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={stopajProfitPortion}
+                  onChangeText={setStopajProfitPortion}
+                  keyboardType="numeric"
+                />
+              </View>
+            ) : stopajMode === "fromProfit" ? (
+              <View>
+                <Text style={styles.inputLabel}>
+                  {t("grossProfit")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 10000`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={stopajProfit}
+                  onChangeText={setStopajProfit}
+                  keyboardType="numeric"
+                />
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.inputLabel}>
+                  {t("principalOrBuyAmount")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 100000`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={stopajBuyAmount}
+                  onChangeText={setStopajBuyAmount}
+                  keyboardType="numeric"
+                />
+
+                <Text style={styles.inputLabel}>
+                  {t("saleOrTotalAmount")} ({currency}):
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`${t("placeholderEg")} 117500`}
+                  placeholderTextColor={themeColors.textSecondary}
+                  value={stopajSellAmount}
+                  onChangeText={setStopajSellAmount}
+                  keyboardType="numeric"
+                />
+              </View>
+            )}
+
+            {/* Quick Stopaj Rates */}
+            <Text style={styles.inputLabel}>{t("stopajRate")}:</Text>
+            <View style={styles.ratePresetsRow}>
+              {["0", "5", "7.5", "10", "15", "17.5", "20"].map((rate) => (
+                <TouchableOpacity
+                  key={rate}
+                  style={[
+                    styles.rateChip,
+                    stopajRate === rate && {
+                      backgroundColor: themeColors.primary,
+                      borderColor: themeColors.primary,
+                    },
+                  ]}
+                  onPress={() => {
+                    setStopajRate(rate);
+                    triggerHaptic();
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.rateChipText,
+                      stopajRate === rate && styles.rateChipTextActive,
+                    ]}
+                  >
+                    %{rate}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={styles.input}
+              placeholder={`${t("stopajRate")} ${t("placeholderEg")} 17.5`}
+              placeholderTextColor={themeColors.textSecondary}
+              value={stopajRate}
+              onChangeText={setStopajRate}
+              keyboardType="numeric"
+            />
+
+            <TouchableOpacity style={styles.button} onPress={calculateStopaj}>
+              <Text style={styles.buttonText}>🏛️ {t("calculate")}</Text>
             </TouchableOpacity>
           </View>
         );
@@ -1947,93 +2978,650 @@ export default function ToolsScreen() {
         marginBottom: 8,
         textAlign: "center",
       },
+      segmentedContainer: {
+        flexDirection: "row",
+        backgroundColor: themeColors.background,
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: themeColors.secondary,
+      },
+      segmentedTab: {
+        flex: 1,
+        minHeight: 52,
+        paddingVertical: 10,
+        paddingHorizontal: 4,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 8,
+      },
+      segmentedTabText: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: themeColors.textSecondary,
+        textAlign: "center",
+        lineHeight: 16,
+      },
+      segmentedTabTextActive: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      toggleRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 15,
+      },
+      toggleButton: {
+        flex: 1,
+        marginHorizontal: 4,
+        paddingVertical: 12,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+      },
+      toggleButtonText: {
+        fontSize: 15,
+        fontWeight: "bold",
+      },
+      ratePresetsRow: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-between",
+        marginBottom: 12,
+      },
+      rateChip: {
+        backgroundColor: themeColors.background,
+        borderWidth: 1,
+        borderColor: themeColors.secondary,
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 8,
+        marginBottom: 6,
+        minWidth: "15%",
+        alignItems: "center",
+      },
+      rateChipText: {
+        fontSize: 12,
+        fontWeight: "600",
+        color: themeColors.text,
+      },
+      rateChipTextActive: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      currencyBar: {
+        marginBottom: 16,
+      },
+      currencyBarLabel: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: themeColors.textSecondary,
+        marginBottom: 8,
+      },
+      currencyChips: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+      },
+      currencyChip: {
+        flex: 1,
+        backgroundColor: themeColors.background,
+        borderWidth: 1,
+        borderColor: themeColors.secondary,
+        borderRadius: 8,
+        paddingVertical: 8,
+        marginHorizontal: 3,
+        alignItems: "center",
+        justifyContent: "center",
+      },
+      currencyChipText: {
+        fontSize: 12,
+        fontWeight: "600",
+        color: themeColors.text,
+      },
+      currencyChipTextActive: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      analysisCardContainer: {
+        marginTop: 20,
+        backgroundColor: themeColors.surface,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: themeColors.primary,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDarkMode ? 0.3 : 0.12,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+      cardHeaderRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 14,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: isDarkMode
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.08)",
+      },
+      cardHeaderTitle: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: themeColors.primary,
+        flex: 1,
+      },
+      copyButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: isDarkMode
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.05)",
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: themeColors.secondary,
+      },
+      copyButtonActive: {
+        backgroundColor: "#16A34A",
+        borderColor: "#16A34A",
+      },
+      copyButtonText: {
+        fontSize: 12,
+        fontWeight: "600",
+        color: themeColors.text,
+        marginLeft: 4,
+      },
+      copyButtonTextActive: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      heroBox: {
+        backgroundColor: isDarkMode
+          ? "rgba(255,255,255,0.04)"
+          : "rgba(0,0,0,0.03)",
+        borderRadius: 12,
+        padding: 14,
+        alignItems: "center",
+        marginBottom: 16,
+        borderWidth: 1.5,
+        borderColor: isDarkMode
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.08)",
+      },
+      heroLabel: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: themeColors.textSecondary,
+        marginBottom: 6,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+      },
+      heroValueRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+      heroValue: {
+        fontSize: 26,
+        fontWeight: "800",
+        color: themeColors.primary,
+        textAlign: "center",
+      },
+      heroCopyBadge: {
+        marginLeft: 8,
+        padding: 6,
+        borderRadius: 8,
+        backgroundColor: isDarkMode
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(0,0,0,0.05)",
+      },
+      heroSubText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "#16A34A",
+        marginTop: 6,
+        textAlign: "center",
+      },
+      heroTapHint: {
+        fontSize: 11,
+        color: themeColors.textSecondary,
+        marginTop: 6,
+      },
+      detailRowsContainer: {
+        marginBottom: 10,
+      },
+      detailRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 6,
+        borderRadius: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: isDarkMode
+          ? "rgba(255,255,255,0.06)"
+          : "rgba(0,0,0,0.05)",
+      },
+      detailRowLabel: {
+        fontSize: 14,
+        color: themeColors.textSecondary,
+        flex: 1,
+        marginRight: 8,
+      },
+      detailRowValueContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-end",
+      },
+      detailRowValue: {
+        fontSize: 14,
+        fontWeight: "700",
+        color: themeColors.text,
+        textAlign: "right",
+      },
+      detailValueProfit: {
+        color: "#16A34A",
+      },
+      detailValueLoss: {
+        color: "#DC2626",
+      },
+      bottomButtonsContainer: {
+        marginTop: 14,
+        width: "100%",
+      },
+      primaryCopyButton: {
+        width: "100%",
+        backgroundColor: themeColors.primary,
+        borderRadius: 12,
+        paddingVertical: 13,
+        paddingHorizontal: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+      primaryCopyButtonText: {
+        color: "#fff",
+        fontSize: 14,
+        fontWeight: "bold",
+        marginLeft: 8,
+      },
+      secondaryCopyButton: {
+        width: "100%",
+        marginTop: 8,
+        borderWidth: 1.5,
+        borderColor: themeColors.secondary,
+        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: isDarkMode
+          ? "rgba(255,255,255,0.03)"
+          : "rgba(0,0,0,0.02)",
+      },
+      secondaryCopyButtonText: {
+        color: themeColors.text,
+        fontSize: 13,
+        fontWeight: "600",
+        marginLeft: 8,
+      },
+      copyToastBanner: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(22, 163, 74, 0.12)",
+        borderWidth: 1,
+        borderColor: "#16A34A",
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginBottom: 12,
+        justifyContent: "center",
+      },
+      copyToastBannerText: {
+        color: "#16A34A",
+        fontSize: 12,
+        fontWeight: "bold",
+        marginLeft: 6,
+      },
     });
 
   const styles = getStyles();
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={{ flex: 1 }}
       >
-        <Text style={styles.headerTitle}>{t("tools")}</Text>
-
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.toolSelectorScroll}
-          contentContainerStyle={styles.toolSelectorRow}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={[
+            styles.scrollContainer,
+            { paddingBottom: 260 },
+          ]}
         >
-          {tools.map((tool) => (
-            <TouchableOpacity
-              key={tool.id}
-              style={[
-                styles.toolButton,
-                selectedTool === tool.id && styles.selectedToolButton,
-              ]}
-              onPress={() => {
-                triggerHaptic();
-                setSelectedTool(tool.id);
-                setResult("");
-                setAmount("");
-                setAmount2("");
-                setStockName("");
-                setStockPrice("");
-                setStockQuantity("");
-                setStockResults(null);
-                setBinaryInput("");
-                setStartDate("");
-                setEndDate("");
-                setDaysBetweenResult("");
-                setAddDaysResult("");
-                setSubtractDaysResult("");
-                setKdvRateState("20");
-                setLoanInterest("");
-                setLoanTermInput("");
-                setTipPeople("");
-              }}
-            >
-              <FontAwesome
-                name={tool.icon}
-                size={16}
-                color={selectedTool === tool.id ? "#fff" : themeColors.text}
-              />
-              <Text
+          <Text style={styles.headerTitle}>{t("tools")}</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.toolSelectorScroll}
+            contentContainerStyle={styles.toolSelectorRow}
+          >
+            {tools.map((tool) => (
+              <TouchableOpacity
+                key={tool.id}
                 style={[
-                  styles.toolButtonText,
-                  selectedTool === tool.id && styles.selectedToolButtonText,
+                  styles.toolButton,
+                  selectedTool === tool.id && styles.selectedToolButton,
                 ]}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedTool(tool.id);
+                  setResult("");
+                  setAnalysisCard(null);
+                  setCopiedToast(false);
+                  setCopiedKey(null);
+                  setCopiedToastText("");
+                  setAmount("");
+                  setAmount2("");
+                  setStockName("");
+                  setStockPrice("");
+                  setStockQuantity("");
+                  setStockResults(null);
+                  setBinaryInput("");
+                  setStartDate("");
+                  setEndDate("");
+                  setDaysBetweenResult("");
+                  setAddDaysResult("");
+                  setSubtractDaysResult("");
+                  setKdvRateState("20");
+                  setLoanInterest("");
+                  setLoanTermInput("");
+                  setTipPeople("");
+                  setCostMode("fromRate");
+                  setCostCurrentPrice("");
+                  setCostRate("");
+                  setCostIsProfit(true);
+                  setCostQuantity("");
+                  setCostBuyPrice("");
+                  setStopajMode("fromBalanceProfit");
+                  setStopajTotalBalance("");
+                  setStopajProfitPortion("");
+                  setStopajProfit("");
+                  setStopajRate("17.5");
+                  setStopajBuyAmount("");
+                  setStopajSellAmount("");
+                }}
               >
-                {tool.title}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <FontAwesome
+                  name={tool.icon}
+                  size={16}
+                  color={selectedTool === tool.id ? "#fff" : themeColors.text}
+                />
+                <Text
+                  style={[
+                    styles.toolButtonText,
+                    selectedTool === tool.id && styles.selectedToolButtonText,
+                  ]}
+                >
+                  {tool.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-        <View style={styles.toolContainer}>
-          {renderTool()}
+          <View style={styles.toolContainer}>
+            {renderTool()}
 
-          {result !== "" && selectedTool !== "stock" && (
-            <ScrollView
-              style={styles.resultScrollView}
-              showsVerticalScrollIndicator={true}
-              contentContainerStyle={styles.resultScrollContent}
-              nestedScrollEnabled={true}
-              bounces={true}
-              scrollEventThrottle={16}
-            >
-              <View style={styles.result}>
-                <Text style={styles.resultText}>{result}</Text>
+            {/* Modern Analysis Card with Copy & Row Spacing */}
+            {analysisCard && (
+              <View style={styles.analysisCardContainer}>
+                {/* Floating Feedback Banner */}
+                {copiedToast && (
+                  <View style={styles.copyToastBanner}>
+                    <FontAwesome name="check-circle" size={14} color="#16A34A" />
+                    <Text style={styles.copyToastBannerText}>
+                      {copiedToastText || t("resultCopiedToast")}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.cardHeaderRow}>
+                  <Text style={styles.cardHeaderTitle}>
+                    {analysisCard.title}
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.copyButton,
+                      copiedKey === "result" && styles.copyButtonActive,
+                    ]}
+                    onPress={() => handleCopy(analysisCard.heroValue, "result")}
+                  >
+                    <FontAwesome
+                      name={copiedKey === "result" ? "check" : "copy"}
+                      size={13}
+                      color={copiedKey === "result" ? "#fff" : themeColors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.copyButtonText,
+                        copiedKey === "result" && styles.copyButtonTextActive,
+                      ]}
+                    >
+                      {copiedKey === "result" ? t("copied") : t("copy")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Hero Box (Tıklanınca Yalnızca Sonucu Kopyalar) */}
+                <TouchableOpacity
+                  activeOpacity={0.75}
+                  style={[
+                    styles.heroBox,
+                    copiedKey === "result" && {
+                      borderColor: "#16A34A",
+                      backgroundColor: "rgba(22, 163, 74, 0.08)",
+                    },
+                  ]}
+                  onPress={() => handleCopy(analysisCard.heroValue, "result")}
+                >
+                  <Text style={styles.heroLabel}>{analysisCard.heroLabel}</Text>
+                  <View style={styles.heroValueRow}>
+                    <Text style={styles.heroValue}>{analysisCard.heroValue}</Text>
+                    <View style={styles.heroCopyBadge}>
+                      <FontAwesome
+                        name={copiedKey === "result" ? "check" : "copy"}
+                        size={14}
+                        color={
+                          copiedKey === "result" ? "#16A34A" : themeColors.primary
+                        }
+                      />
+                    </View>
+                  </View>
+                  {analysisCard.subHero && (
+                    <Text style={styles.heroSubText}>
+                      {analysisCard.subHero}
+                    </Text>
+                  )}
+                  <Text style={styles.heroTapHint}>
+                    {copiedKey === "result"
+                      ? `✓ ${t("copied")}`
+                      : `👆 ${language === "tr" ? "Sonucu kopyalamak için dokunun" : "Tap to copy result"}`}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Detail Rows (Satıra dokunulunca o satırdaki değer kopyalanır) */}
+                <View style={styles.detailRowsContainer}>
+                  {analysisCard.rows.map((row, idx) => {
+                    const isRowCopied = copiedKey === `row_${idx}`;
+                    return (
+                      <TouchableOpacity
+                        key={idx}
+                        activeOpacity={0.65}
+                        style={[
+                          styles.detailRow,
+                          isRowCopied && {
+                            backgroundColor: "rgba(22, 163, 74, 0.08)",
+                          },
+                        ]}
+                        onPress={() => {
+                          const cleaned = cleanNumericValue(row.value);
+                          handleCopy(
+                            row.value,
+                            `row_${idx}`,
+                            `${row.label}: ${cleaned}`,
+                          );
+                        }}
+                      >
+                        <Text style={styles.detailRowLabel}>{row.label}</Text>
+                        <View style={styles.detailRowValueContainer}>
+                          <Text
+                            style={[
+                              styles.detailRowValue,
+                              row.isProfit && styles.detailValueProfit,
+                              row.isLoss && styles.detailValueLoss,
+                            ]}
+                          >
+                            {row.value}
+                          </Text>
+                          <FontAwesome
+                            name={isRowCopied ? "check" : "copy"}
+                            size={11}
+                            color={
+                              isRowCopied
+                                ? "#16A34A"
+                                : themeColors.textSecondary
+                            }
+                            style={{
+                              marginLeft: 6,
+                              opacity: isRowCopied ? 1 : 0.6,
+                            }}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Alt Kopyalama Butonları: Biri Yalnızca Sonuç, Diğeri Tüm Özet */}
+                <View style={styles.bottomButtonsContainer}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={[
+                      styles.primaryCopyButton,
+                      copiedKey === "result" && { backgroundColor: "#16A34A" },
+                    ]}
+                    onPress={() => handleCopy(analysisCard.heroValue, "result")}
+                  >
+                    <FontAwesome
+                      name={copiedKey === "result" ? "check" : "copy"}
+                      size={14}
+                      color="#fff"
+                    />
+                    <Text style={styles.primaryCopyButtonText}>
+                      {copiedKey === "result" ? t("copied") : t("copyResult")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    style={[
+                      styles.secondaryCopyButton,
+                      copiedKey === "summary" && {
+                        borderColor: "#16A34A",
+                        backgroundColor: "rgba(22, 163, 74, 0.15)",
+                      },
+                    ]}
+                    onPress={() =>
+                      handleCopy(
+                        analysisCard.rawText,
+                        "summary",
+                        t("summaryCopiedToast"),
+                      )
+                    }
+                  >
+                    <FontAwesome
+                      name={copiedKey === "summary" ? "check" : "file-text-o"}
+                      size={14}
+                      color={
+                        copiedKey === "summary" ? "#16A34A" : themeColors.text
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.secondaryCopyButtonText,
+                        copiedKey === "summary" && { color: "#16A34A" },
+                      ]}
+                    >
+                      {copiedKey === "summary" ? t("copied") : t("copySummary")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </ScrollView>
-          )}
+            )}
 
-          {selectedTool === "stock" && stockResults && (
-            <StockResultsComponent stockData={stockResults} />
-          )}
-        </View>
-      </ScrollView>
+            {/* Plain result for other tools when no analysis card */}
+            {result !== "" && !analysisCard && selectedTool !== "stock" && (
+              <View style={{ marginTop: 20 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    marginBottom: 8,
+                  }}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.copyButton,
+                      copiedKey === "plain" && styles.copyButtonActive,
+                    ]}
+                    onPress={() => handleCopy(result, "plain")}
+                  >
+                    <FontAwesome
+                      name={copiedKey === "plain" ? "check" : "copy"}
+                      size={13}
+                      color={copiedKey === "plain" ? "#fff" : themeColors.text}
+                    />
+                    <Text
+                      style={[
+                        styles.copyButtonText,
+                        copiedKey === "plain" && styles.copyButtonTextActive,
+                      ]}
+                    >
+                      {copiedKey === "plain" ? t("copied") : t("copy")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <ScrollView
+                  style={styles.resultScrollView}
+                  showsVerticalScrollIndicator={true}
+                  contentContainerStyle={styles.resultScrollContent}
+                  nestedScrollEnabled={true}
+                  bounces={true}
+                  scrollEventThrottle={16}
+                >
+                  <View style={styles.result}>
+                    <Text style={styles.resultText}>{result}</Text>
+                  </View>
+                </ScrollView>
+              </View>
+            )}
+
+            {selectedTool === "stock" && stockResults && (
+              <StockResultsComponent stockData={stockResults} />
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

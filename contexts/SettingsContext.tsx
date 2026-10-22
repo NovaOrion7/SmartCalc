@@ -37,6 +37,8 @@ const translations = {
     binary: "Binary",
     base: "Taban",
     stock: "Hisse",
+    cost: "Maliyet",
+    stopaj: "Stopaj",
 
     // Settings
     settings: "Ayarlar",
@@ -294,6 +296,65 @@ const translations = {
     yourAge: "Yaşınız",
     nextBirthday: "Sonraki Doğum Günü",
     daysUntilBirthday: "Doğum gününüze kalan",
+
+    // Alış Maliyeti Hesaplayıcı
+    costCalculator: "Alış Maliyeti Hesaplayıcı",
+    costModeRate: "Orandan Maliyet Bul",
+    costModePrices: "Fiyatlardan Kâr/Zarar",
+    currentPrice: "Güncel / Satış Fiyatı",
+    buyPrice: "Alış Fiyatı (Maliyet)",
+    profitLossRate: "Kâr / Zarar Oranı (%)",
+    isProfit: "Kâr",
+    isLoss: "Zarar",
+    stockQuantityOptional: "Adet (İsteğe Bağlı)",
+    unitCostPrice: "Birim Alış Maliyeti",
+    unitProfit: "Birim Başı Kâr",
+    unitLoss: "Birim Başı Zarar",
+    totalInvestment: "Toplam Yatırım (Maliyet)",
+    currentTotalValue: "Toplam Güncel Değer",
+    totalProfit: "Toplam Kâr",
+    totalLoss: "Toplam Zarar",
+    statusInProfit: "Kârda",
+    statusInLoss: "Zararda",
+    statusBreakEven: "Başa Baş (Kâr/Zarar Yok)",
+    enterValidPrice: "Geçerli bir fiyat girin",
+    enterValidRate: "Geçerli bir oran girin",
+    rateCannotExceed100: "Zarar oranı %100 veya üzeri olamaz",
+
+    // Stopaj Hesaplayıcı
+    stopajCalculator: "Stopaj & Net Kâr Hesaplayıcı",
+    stopajModeProfit: "Sadece Kâr",
+    stopajModeBuySell: "Alış & Satış",
+    grossProfit: "Brüt Kâr Tutarı",
+    stopajRate: "Stopaj Oranı (%)",
+    stopajAmount: "Stopaj Kesintisi",
+    netProfit: "Net Ele Geçecek Kâr",
+    principalOrBuyAmount: "Alış Tutarı / Anapara",
+    saleOrTotalAmount: "Satış / Güncel Tutar",
+    netTotalPayout: "Net Ele Geçecek Toplam",
+    grossReturnRate: "Brüt Getiri",
+    netReturnRate: "Net Getiri",
+    noStopajOnLoss: "Zararda stopaj kesintisi uygulanmaz",
+    enterValidProfit: "Geçerli bir kâr tutarı girin",
+
+    // Para Birimi ve Kopyalama
+    currencySetting: "Varsayılan Para Birimi",
+    currencySettingDesc: "Hesaplamalarda kullanılan para birimi",
+    selectedCurrency: "Seçili Para Birimi",
+    copy: "Kopyala",
+    copyResult: "Sonucu Kopyala",
+    copySummary: "Tüm Özeti Kopyala",
+    resultCopiedToast: "Sonuç panoya kopyalandı",
+    summaryCopiedToast: "Tüm özet panoya kopyalandı",
+    placeholderEg: "örn.",
+
+    // Stopaj Bakiye & Kâr
+    stopajModeBalanceProfit: "Bakiye & Kâr",
+    totalPortfolioValue: "Toplam Portföy / Bakiye",
+    profitPortion: "Bu Bakiyedeki Kâr Tutarı",
+    netPayoutIfSold: "Satsanız Eline Geçecek Net",
+    principalAmount: "Anapara Tutarı",
+    enterValidBalance: "Geçerli bir portföy bakiyesi girin",
   },
   en: {
     // Calculator
@@ -323,6 +384,8 @@ const translations = {
     binary: "Binary",
     base: "Base",
     stock: "Stock",
+    cost: "Cost Basis",
+    stopaj: "Withholding",
 
     // Settings
     settings: "Settings",
@@ -579,6 +642,65 @@ const translations = {
     yourAge: "Your Age",
     nextBirthday: "Next Birthday",
     daysUntilBirthday: "Days until birthday",
+
+    // Cost Basis Calculator
+    costCalculator: "Cost Basis Calculator",
+    costModeRate: "Cost from Rate",
+    costModePrices: "Profit/Loss from Prices",
+    currentPrice: "Current / Sale Price",
+    buyPrice: "Buy Price (Cost)",
+    profitLossRate: "Profit / Loss Rate (%)",
+    isProfit: "Profit",
+    isLoss: "Loss",
+    stockQuantityOptional: "Quantity (Optional)",
+    unitCostPrice: "Unit Purchase Cost",
+    unitProfit: "Profit Per Unit",
+    unitLoss: "Loss Per Unit",
+    totalInvestment: "Total Investment (Cost)",
+    currentTotalValue: "Current Total Value",
+    totalProfit: "Total Profit",
+    totalLoss: "Total Loss",
+    statusInProfit: "In Profit",
+    statusInLoss: "In Loss",
+    statusBreakEven: "Break Even (No Profit/Loss)",
+    enterValidPrice: "Enter a valid price",
+    enterValidRate: "Enter a valid rate",
+    rateCannotExceed100: "Loss rate cannot be 100% or more",
+
+    // Withholding Tax Calculator
+    stopajCalculator: "Withholding Tax & Net Profit",
+    stopajModeProfit: "Profit Only",
+    stopajModeBuySell: "Buy & Sell",
+    grossProfit: "Gross Profit Amount",
+    stopajRate: "Withholding Rate (%)",
+    stopajAmount: "Withholding Tax Amount",
+    netProfit: "Net Profit Payout",
+    principalOrBuyAmount: "Buy Amount / Principal",
+    saleOrTotalAmount: "Sale / Current Amount",
+    netTotalPayout: "Net Total Payout",
+    grossReturnRate: "Gross Return",
+    netReturnRate: "Net Return",
+    noStopajOnLoss: "No withholding tax applies to losses",
+    enterValidProfit: "Enter a valid profit amount",
+
+    // Currency and Copying
+    currencySetting: "Default Currency",
+    currencySettingDesc: "Currency used in calculations",
+    selectedCurrency: "Selected Currency",
+    copy: "Copy",
+    copyResult: "Copy Result",
+    copySummary: "Copy Full Summary",
+    resultCopiedToast: "Result copied to clipboard",
+    summaryCopiedToast: "Summary copied to clipboard",
+    placeholderEg: "e.g.",
+
+    // Withholding Balance & Profit
+    stopajModeBalanceProfit: "Balance & Profit",
+    totalPortfolioValue: "Total Portfolio / Balance",
+    profitPortion: "Profit Portion in Balance",
+    netPayoutIfSold: "Net Payout If Sold",
+    principalAmount: "Principal Amount",
+    enterValidBalance: "Enter a valid portfolio balance",
   },
 };
 
@@ -624,6 +746,8 @@ interface SettingsContextType {
   addNoteToScientificHistory: (index: number, note: string) => void;
   updateNoteInScientificHistory: (index: number, note: string) => void;
   deleteNoteFromScientificHistory: (index: number) => void;
+  currency: string;
+  setCurrency: (curr: string) => void;
   t: (key: string) => string;
   getThemeColors: () => ThemeColors;
 }
@@ -655,6 +779,7 @@ interface SettingsState {
     | "purple"
     | "rose"
     | "midnight";
+  currency: string;
 }
 
 const defaultSettings: SettingsState = {
@@ -666,6 +791,7 @@ const defaultSettings: SettingsState = {
   language: "tr",
   highContrast: false,
   theme: "default",
+  currency: "USD",
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -711,6 +837,7 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
           highContrast:
             parsedSettings.highContrast ?? defaultSettings.highContrast,
           theme: parsedSettings.theme ?? defaultSettings.theme,
+          currency: parsedSettings.currency ?? defaultSettings.currency,
         });
       }
     } catch (error) {
@@ -1133,8 +1260,13 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     return themes[theme][isDarkMode ? "dark" : "light"];
   };
 
+  const setCurrency = (curr: string) => {
+    updateSettings({ currency: curr });
+  };
+
   const contextValue: SettingsContextType = {
     ...settings,
+    setCurrency,
     updateSettings,
     triggerHaptic,
     formatNumber,

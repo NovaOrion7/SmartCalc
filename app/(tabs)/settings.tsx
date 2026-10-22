@@ -24,6 +24,8 @@ export default function SettingsScreen() {
     language,
     highContrast,
     theme,
+    currency,
+    setCurrency,
     updateSettings,
     triggerHaptic,
     clearHistory,
@@ -330,6 +332,36 @@ export default function SettingsScreen() {
     languageButtonTextActive: {
       color: "#fff",
     },
+    currencyChipsRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 8,
+      width: "100%",
+    },
+    currencyChipButton: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: themeColors.secondary,
+      backgroundColor: themeColors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    currencyChipButtonActive: {
+      backgroundColor: themeColors.primary,
+      borderColor: themeColors.primary,
+    },
+    currencyChipButtonText: {
+      color: themeColors.text,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    currencyChipButtonTextActive: {
+      color: "#fff",
+      fontWeight: "bold",
+    },
     themeGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -483,7 +515,8 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View style={[styles.settingItem, styles.lastSettingItem]}>
+          {/* Dil Ayarı */}
+          <View style={styles.settingItem}>
             <View style={{ flex: 1 }}>
               <Text style={styles.settingLabel}>{t("language")}</Text>
               <Text style={styles.settingDescription}>{t("languageDesc")}</Text>
@@ -521,6 +554,51 @@ export default function SettingsScreen() {
                   EN
                 </Text>
               </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Para Birimi Ayarı */}
+          <View
+            style={[
+              styles.settingItem,
+              styles.lastSettingItem,
+              { flexDirection: "column", alignItems: "flex-start" },
+            ]}
+          >
+            <View style={{ marginBottom: 12, width: "100%" }}>
+              <Text style={styles.settingLabel}>{t("currencySetting")}</Text>
+              <Text style={styles.settingDescription}>
+                {t("currencySettingDesc")}
+              </Text>
+            </View>
+            <View style={styles.currencyChipsRow}>
+              {[
+                { code: "USD", label: "USD ($)" },
+                { code: "EUR", label: "EUR (€)" },
+                { code: "TRY", label: "TRY (₺)" },
+                { code: "GBP", label: "GBP (£)" },
+              ].map((c) => (
+                <TouchableOpacity
+                  key={c.code}
+                  style={[
+                    styles.currencyChipButton,
+                    currency === c.code && styles.currencyChipButtonActive,
+                  ]}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCurrency(c.code);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.currencyChipButtonText,
+                      currency === c.code && styles.currencyChipButtonTextActive,
+                    ]}
+                  >
+                    {c.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
         </View>
